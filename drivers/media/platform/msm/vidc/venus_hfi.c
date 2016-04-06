@@ -1326,6 +1326,29 @@ static int venus_hfi_suspend(void *dev)
 	return rc;
 }
 
+static int venus_hfi_flush_debug_queue(void *dev)
+{
+	int rc = 0;
+	struct venus_hfi_device *device = (struct venus_hfi_device *) dev;
+
+	if (!device) {
+		dprintk(VIDC_ERR, "%s invalid device\n", __func__);
+		return -EINVAL;
+	}
+
+	mutex_lock(&device->lock);
+
+	if (device->power_enabled) {
+		dprintk(VIDC_DBG, "Venus is busy\n");
+		rc = -EBUSY;
+		goto exit;
+	}
+	__flush_debug_queue(device, NULL);
+exit:
+	mutex_unlock(&device->lock);
+	return rc;
+}
+
 static enum hal_default_properties venus_hfi_get_default_properties(void *dev)
 {
 	enum hal_default_properties prop = 0;
@@ -3299,6 +3322,7 @@ static void print_sfr_message(struct venus_hfi_device *device)
 static void __flush_debug_queue(struct venus_hfi_device *device, u8 *packet)
 {
 	bool local_packet = false;
+	enum vidc_msg_prio log_level = VIDC_FW;
 
 	if (!device) {
 		dprintk(VIDC_ERR, "%s: Invalid params\n", __func__);
@@ -3314,6 +3338,13 @@ static void __flush_debug_queue(struct venus_hfi_device *device, u8 *packet)
 		}
 
 		local_packet = true;
+
+		/*
+		 * Local packek is used when something FATAL occurred.
+		 * It is good to print these logs by default.
+		 */
+
+		log_level = VIDC_ERR;
 	}
 
 #define SKIP_INVALID_PKT(pkt_size, payload_size, pkt_hdr_size) ({ \
@@ -3361,7 +3392,7 @@ static void __flush_debug_queue(struct venus_hfi_device *device, u8 *packet)
 				pkt->msg_size, sizeof(*pkt));
 
 			pkt->rg_msg_data[pkt->msg_size-1] = '\0';
-			dprintk(VIDC_FW, "%s", pkt->rg_msg_data);
+			dprintk(log_level, "%s", pkt->rg_msg_data);
 		}
 	}
 #undef SKIP_INVALID_PKT
@@ -4750,6 +4781,7 @@ static void venus_init_hfi_callbacks(struct hfi_device *hdev)
 	hdev->get_fw_info = venus_hfi_get_fw_info;
 	hdev->get_core_capabilities = venus_hfi_get_core_capabilities;
 	hdev->suspend = venus_hfi_suspend;
+	hdev->flush_debug_queue = venus_hfi_flush_debug_queue;
 	hdev->get_core_clock_rate = venus_hfi_get_core_clock_rate;
 	hdev->get_default_properties = venus_hfi_get_default_properties;
 }

@@ -87,6 +87,8 @@ Optional properties:
 - cache-slice-names = An array of supported cache slice names by llcc
 - cache-slices = An array of supported cache slice ids corresponding
   to cache-slice-names by llcc
+- qcom,debug-timeout = A bool indicating that FW errors such as SYS_ERROR,
+  SESSION_ERROR and timeouts will be treated as Fatal.
 
 [Second level nodes]
 Context Banks
