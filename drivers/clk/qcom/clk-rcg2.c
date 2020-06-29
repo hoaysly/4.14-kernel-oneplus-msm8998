@@ -1533,7 +1533,11 @@ static int clk_gfx3d_src_determine_rate(struct clk_hw *hw,
 	}
 
 	f = qcom_find_freq(rcg->freq_tbl, req->rate);
-	if (!f || (req->rate != f->freq))
+
+	if (!f)
+		return -EINVAL;
+
+	if (req->rate != f->freq)
 		req->rate = f->freq;
 
 	/* Indexes of source from the parent map */
