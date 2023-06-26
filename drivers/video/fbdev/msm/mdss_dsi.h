@@ -588,6 +588,9 @@ struct mdss_dsi_ctrl_pdata {
 
 	struct dsi_err_container err_cont;
 
+	int disp_vci_en_gpio;
+	int disp_poc_en_gpio;
+
 	struct dsi_panel_cmds hbm_on_cmds;
 	struct dsi_panel_cmds hbm_off_cmds;
 	int hbm_mode;
@@ -645,6 +648,9 @@ struct dsi_status_data {
 	struct delayed_work check_status;
 	struct msm_fb_data_type *mfd;
 };
+
+int mdss_dsi_disp_poc_en(struct mdss_panel_data *pdata, int enable);
+int mdss_dsi_disp_vci_en(struct mdss_panel_data *pdata, int enable);
 
 int mdss_dsi_panel_set_hbm_mode(struct mdss_dsi_ctrl_pdata *ctrl, int level);
 int mdss_dsi_panel_get_hbm_mode(struct mdss_dsi_ctrl_pdata *ctrl);
