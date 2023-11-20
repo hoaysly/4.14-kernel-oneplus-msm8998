@@ -972,6 +972,35 @@ static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
 	}
 }
 
+int mdss_dsi_panel_set_panel_mode(struct dsi_panel_cmds *on_cmd, struct dsi_panel_cmds *off_cmd,
+				struct mdss_dsi_ctrl_pdata *ctrl, int level)
+{
+	struct dsi_panel_cmds *cmd;
+	int ret = 0;
+
+	if (mdss_dsi_is_panel_on_lp(&ctrl->panel_data)) {
+		pr_err("Cannot change panel mode in DSI low power mode");
+		return -1;
+	}
+
+	mutex_lock(&ctrl->panel_mode_lock);
+	if (!ctrl->is_panel_on) {
+		mutex_unlock(&ctrl->panel_mode_lock);
+		return ret;
+	}
+
+	cmd = level ? on_cmd : off_cmd;
+
+	if (cmd->cmd_cnt)
+		mdss_dsi_panel_cmds_send(ctrl, cmd, CMD_REQ_COMMIT);
+	else
+		ret = -ENOSYS;
+
+	mutex_unlock(&ctrl->panel_mode_lock);
+
+	return ret;
+}
+
 int mdss_dsi_panel_set_hbm_mode(struct mdss_dsi_ctrl_pdata *ctrl, int level)
 {
 	struct dsi_panel_cmds *hbm_on_cmds,*hbm_off_cmds;
