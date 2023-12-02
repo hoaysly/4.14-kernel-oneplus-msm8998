@@ -84,6 +84,8 @@ struct limits_dcvs_hw {
 	char sensor_name[THERMAL_NAME_LENGTH];
 	uint32_t affinity;
 	uint32_t temp_limits[LIMITS_TRIP_MAX];
+	struct thermal_cooling_device *cdev;
+	struct mutex cdev_lock;
 	int irq_num;
 	void *osm_hw_reg;
 	void *int_clr_reg;
@@ -372,13 +374,33 @@ static struct cpu_cooling_ops cd_ops = {
 	.floor_limit = lmh_set_min_limit,
 };
 
+static int limits_cpu_online(unsigned int online_cpu)
+{
+	struct limits_dcvs_hw *hw;
+
+	if (!hw)
+		return 0;
+
+	list_for_each_entry(hw, &lmh_dcvs_hw_list, list) {
+		mutex_lock(&hw->cdev_lock);
+		if (hw->cdev == NULL) {
+			hw->cdev = cpufreq_platform_cooling_register(&hw->core_map,
+					&cd_ops);
+			if (IS_ERR_OR_NULL(hw->cdev))
+				hw->cdev = NULL;
+		}
+		mutex_unlock(&hw->cdev_lock);
+	}
+
+	return 0;
+}
+
 static int limits_dcvs_probe(struct platform_device *pdev)
 {
 	int ret;
 	int affinity = -1;
 	struct limits_dcvs_hw *hw;
 	struct thermal_zone_device *tzdev;
-	struct thermal_cooling_device *cdev;
 	struct device_node *dn = pdev->dev.of_node;
 	struct device_node *cpu_node, *lmh_node;
 	uint32_t request_reg, clear_reg, min_reg;
@@ -472,11 +494,6 @@ static int limits_dcvs_probe(struct platform_device *pdev)
 	if (IS_ERR_OR_NULL(tzdev))
 		return PTR_ERR(tzdev);
 
-	/* Setup cooling devices to request mitigation states */
-	cdev = cpufreq_platform_cooling_register(&hw->core_map, &cd_ops);
-	if (IS_ERR_OR_NULL(cdev))
-		return PTR_ERR(cdev);
-
 	switch (affinity) {
 	case 0:
 		request_reg = LIMITS_CLUSTER_0_REQ;
@@ -508,6 +525,7 @@ static int limits_dcvs_probe(struct platform_device *pdev)
 		return -ENOMEM;
 	}
 	mutex_init(&hw->access_lock);
+	mutex_init(&hw->cdev_lock);
 	INIT_DEFERRABLE_WORK(&hw->freq_poll_work, limits_dcvs_poll);
 
 	hw->irq_num = of_irq_get(pdev->dev.of_node, 0);
@@ -524,6 +542,10 @@ static int limits_dcvs_probe(struct platform_device *pdev)
 		pr_err("Error registering for irq. err:%d\n", ret);
 		return ret;
 	}
+
+	if (list_empty(&lmh_dcvs_hw_list))
+		cpuhp_setup_state(CPUHP_AP_ONLINE_DYN, "lmh-dcvs/cdev:online",
+				limits_cpu_online, NULL);
 
 	INIT_LIST_HEAD(&hw->list);
 	list_add(&hw->list, &lmh_dcvs_hw_list);
