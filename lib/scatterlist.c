@@ -715,6 +715,8 @@ EXPORT_SYMBOL(sg_miter_next);
 void sg_miter_stop(struct sg_mapping_iter *miter)
 {
 	WARN_ON(miter->consumed > miter->length);
+	
+	preempt_disable();
 
 	/* drop resources from the last iteration */
 	if (miter->addr) {
@@ -736,6 +738,8 @@ void sg_miter_stop(struct sg_mapping_iter *miter)
 		miter->length = 0;
 		miter->consumed = 0;
 	}
+	
+	preempt_enable();
 }
 EXPORT_SYMBOL(sg_miter_stop);
 
