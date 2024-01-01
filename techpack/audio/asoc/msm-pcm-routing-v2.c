@@ -24246,6 +24246,8 @@ int __init msm_soc_routing_platform_init(void)
 	return platform_driver_register(&msm_routing_pcm_driver);
 }
 
+module_init(msm_soc_routing_platform_init);
+
 void msm_soc_routing_platform_exit(void)
 {
 	msm_routing_delete_cal_data();
@@ -24253,6 +24255,8 @@ void msm_soc_routing_platform_exit(void)
 	mutex_destroy(&routing_lock);
 	platform_driver_unregister(&msm_routing_pcm_driver);
 }
+
+module_exit(msm_soc_routing_platform_exit);
 
 MODULE_DESCRIPTION("MSM routing platform driver");
 MODULE_LICENSE("GPL v2");
