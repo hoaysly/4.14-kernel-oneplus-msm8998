@@ -706,7 +706,7 @@ KBUILD_CFLAGS	+= $(call cc-disable-warning, attribute-alias)
 ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
 KBUILD_CFLAGS   += -Os
 else
-KBUILD_CFLAGS   += -O2
+KBUILD_CFLAGS += -O2 -pipe -fstack-protector -march=armv8-a -mtune=cortex-a73
 endif
 
 ifdef CONFIG_CC_WERROR
