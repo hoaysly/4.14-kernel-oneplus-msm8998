@@ -3609,31 +3609,43 @@ out:
 
 static int icnss_pm_suspend_late(struct device *dev)
 {
-	struct icnss_priv *priv = dev_get_drvdata(dev);
-	int ret = 0;
+    struct icnss_priv *priv = dev_get_drvdata(dev);
+    int ret = 0;
+    int max_retries = 10;  // Set the maximum retry count
+    int retry_count = 0;
+    
+    if (priv->magic != ICNSS_MAGIC) {
+        icnss_pr_err("Invalid drvdata for pm suspend_late: dev %pK, data %pK, magic 0x%x\n",
+                     dev, priv, priv->magic);
+        return -EINVAL;
+    }
 
-	if (priv->magic != ICNSS_MAGIC) {
-		icnss_pr_err("Invalid drvdata for pm suspend_late: dev %pK, data %pK, magic 0x%x\n",
-			     dev, priv, priv->magic);
-		return -EINVAL;
-	}
+    icnss_pr_vdbg("PM suspend_late, state: 0x%lx\n", priv->state);
 
-	icnss_pr_vdbg("PM suspend_late, state: 0x%lx\n", priv->state);
+    if (!priv->ops || !priv->ops->suspend_late ||
+        !test_bit(ICNSS_DRIVER_PROBED, &priv->state))
+        goto out;
 
-	if (!priv->ops || !priv->ops->suspend_late ||
-	    !test_bit(ICNSS_DRIVER_PROBED, &priv->state))
-		goto out;
+    while (retry_count < max_retries) {
+        ret = priv->ops->suspend_late(dev);
 
-	ret = priv->ops->suspend_late(dev);
+        if (ret == 0) {
+            break;
+        } else {
+            // Wait for a while before retrying on failure
+            msleep(100);
+            retry_count++;
+        }
+    }
 
 out:
-	if (ret == 0) {
-		priv->stats.pm_suspend_late++;
-		set_bit(ICNSS_PM_SUSPEND_LATE, &priv->state);
-	} else {
-		priv->stats.pm_suspend_late_err++;
-	}
-	return ret;
+    if (ret == 0) {
+        priv->stats.pm_suspend_late++;
+        set_bit(ICNSS_PM_SUSPEND_LATE, &priv->state);
+    } else {
+        priv->stats.pm_suspend_late_err++;
+    }
+    return ret;
 }
 
 static int icnss_pm_resume_early(struct device *dev)
