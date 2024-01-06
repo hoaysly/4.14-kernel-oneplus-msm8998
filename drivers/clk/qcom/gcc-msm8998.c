@@ -3314,6 +3314,7 @@ static struct platform_driver gcc_msm8998_driver = {
 	.driver = {
 		.name = "qcom,gcc-msm8998",
 		.of_match_table = gcc_msm8998_match_table,
+		.probe_type = PROBE_FORCE_SYNCHRONOUS,
 		.owner = THIS_MODULE,
 	},
 };

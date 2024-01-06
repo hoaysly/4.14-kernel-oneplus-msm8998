@@ -3566,6 +3566,7 @@ static struct platform_driver mmcc_voters_msm8998_driver = {
 	.driver = {
 		.name = "mmsscc-voters-msm8998",
 		.of_match_table = mmcc_voters_msm8998_match_table,
+		.probe_type = PROBE_FORCE_SYNCHRONOUS,
 	},
 };
 
