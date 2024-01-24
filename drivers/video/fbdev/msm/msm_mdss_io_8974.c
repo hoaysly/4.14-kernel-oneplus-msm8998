@@ -1301,7 +1301,7 @@ static void mdss_dsi_8996_phy_config(struct mdss_dsi_ctrl_pdata *ctrl)
 }
 
 static void mdss_dsi_phy_regulator_ctrl(struct mdss_dsi_ctrl_pdata *ctrl,
-	bool enable)
+					bool enable)
 {
 	struct mdss_dsi_ctrl_pdata *other_ctrl;
 	struct dsi_shared_data *sdata;
@@ -1329,14 +1329,16 @@ static void mdss_dsi_phy_regulator_ctrl(struct mdss_dsi_ctrl_pdata *ctrl,
 				break;
 			default:
 			/*
-			 * For dual dsi case, do not reconfigure dsi phy
-			 * regulator if the other dsi controller is still
-			 * active.
-			 */
-			if (!mdss_dsi_is_hw_config_dual(sdata) ||
-				(other_ctrl && (!other_ctrl->is_phyreg_enabled
-						|| other_ctrl->mmss_clamp)))
-				mdss_dsi_28nm_phy_regulator_enable(ctrl);
+			* For dual dsi case, do not reconfigure dsi phy
+			* regulator if the other dsi controller is still
+			* active.
+			*/
+				if (!mdss_dsi_is_hw_config_dual(sdata) ||
+				    (other_ctrl &&
+				     (!other_ctrl->is_phyreg_enabled ||
+				      other_ctrl->mmss_clamp)))
+					mdss_dsi_28nm_phy_regulator_enable(
+						ctrl);
 				break;
 			}
 		}
@@ -1348,7 +1350,7 @@ static void mdss_dsi_phy_regulator_ctrl(struct mdss_dsi_ctrl_pdata *ctrl,
 		 * going to be turned off since it is shared.
 		 */
 		if (mdss_dsi_is_hw_config_split(ctrl->shared_data) ||
-			mdss_dsi_is_hw_config_dual(ctrl->shared_data)) {
+		    mdss_dsi_is_hw_config_dual(ctrl->shared_data)) {
 			if (other_ctrl && !other_ctrl->is_phyreg_enabled)
 				mdss_dsi_phy_regulator_disable(ctrl);
 		} else {
