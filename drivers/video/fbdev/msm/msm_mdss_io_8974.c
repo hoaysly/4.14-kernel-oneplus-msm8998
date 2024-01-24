@@ -1328,15 +1328,15 @@ static void mdss_dsi_phy_regulator_ctrl(struct mdss_dsi_ctrl_pdata *ctrl,
 				mdss_dsi_20nm_phy_regulator_enable(ctrl);
 				break;
 			default:
-				/*
-				* For dual dsi case, do not reconfigure dsi phy
-				* regulator if the other dsi controller is still
-				* active.
-				*/
-				if (!mdss_dsi_is_hw_config_dual(sdata) ||
-					(other_ctrl && (!other_ctrl->is_phyreg_enabled
-							|| other_ctrl->mmss_clamp)))
-					mdss_dsi_28nm_phy_regulator_enable(ctrl);
+			/*
+			 * For dual dsi case, do not reconfigure dsi phy
+			 * regulator if the other dsi controller is still
+			 * active.
+			 */
+			if (!mdss_dsi_is_hw_config_dual(sdata) ||
+				(other_ctrl && (!other_ctrl->is_phyreg_enabled
+						|| other_ctrl->mmss_clamp)))
+				mdss_dsi_28nm_phy_regulator_enable(ctrl);
 				break;
 			}
 		}
@@ -2698,7 +2698,8 @@ int mdss_dsi_post_clkoff_cb(void *priv,
 			 * supplies which support turning off in low power
 			 * state
 			 */
-			if (ctrl->ctrl_state & CTRL_STATE_DSI_ACTIVE)
+			if ((ctrl->ctrl_state & CTRL_STATE_DSI_ACTIVE) &&
+				(i != DSI_CORE_PM))
 				if (!sdata->power_data[i].vreg_config
 						->lp_disable_allowed)
 					continue;
@@ -2721,6 +2722,16 @@ int mdss_dsi_post_clkoff_cb(void *priv,
 				ctrl->core_power = false;
 			}
 		}
+
+		/*
+		 * temp workaround until framework issues pertaining to LP2
+		 * power state transitions are fixed. For now, we internally
+		 * transition to LP2 state whenever core power is turned off
+		 * in LP1 state
+		 */
+		if (mdss_dsi_is_panel_on_lp(pdata))
+			mdss_dsi_panel_power_ctrl(pdata,
+				MDSS_PANEL_POWER_LP2);
 	}
 	return rc;
 }
@@ -2758,6 +2769,7 @@ int mdss_dsi_pre_clkon_cb(void *priv,
 		for (i = DSI_CORE_PM; i < DSI_MAX_PM; i++) {
 			if ((ctrl->ctrl_state & CTRL_STATE_DSI_ACTIVE) &&
 				(!pdata->panel_info.cont_splash_enabled) &&
+				(i != DSI_CORE_PM) &&
 				(!sdata->power_data[i].vreg_config
 						->lp_disable_allowed))
 				continue;
@@ -2778,6 +2790,14 @@ int mdss_dsi_pre_clkon_cb(void *priv,
 			}
 
 		}
+		/*
+		 * temp workaround until framework issues pertaining to LP2
+		 * power state transitions are fixed. For now, if we intend to
+		 * send a frame update when in LP1, we have to explicitly exit
+		 * LP2 state here
+		 */
+		if (mdss_dsi_is_panel_on_ulp(pdata))
+			mdss_dsi_panel_power_ctrl(pdata, MDSS_PANEL_POWER_LP1);
 	}
 
 	/* Disable dynamic clock gating*/

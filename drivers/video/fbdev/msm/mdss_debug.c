@@ -609,7 +609,6 @@ static ssize_t mdss_debug_base_reg_read(struct file *file,
 		dbg->buf = kzalloc(dbg->buf_len, GFP_KERNEL);
 
 		if (!dbg->buf) {
-			pr_err("not enough memory to hold reg dump\n");
 			mutex_unlock(&mdss_debug_lock);
 			return -ENOMEM;
 		}
@@ -936,7 +935,7 @@ static ssize_t mdss_debug_perf_mode_write(struct file *file,
 
 	buf[count] = 0;	/* end of string */
 
-	if (sscanf(buf, "%d", &perf_mode) != 1)
+	if (kstrtoint(buf, 10, &perf_mode) != 1)
 		return -EFAULT;
 
 	if (perf_mode) {
@@ -1073,7 +1072,7 @@ static ssize_t mdss_debug_perf_panic_write(struct file *file,
 
 	buf[count] = 0;	/* end of string */
 
-	if (sscanf(buf, "%d", &disable_panic) != 1)
+	if (kstrtoint(buf, 10, &disable_panic) != 1)
 		return -EFAULT;
 
 	if (disable_panic) {
@@ -1272,10 +1271,9 @@ int mdss_debugfs_init(struct mdss_data_type *mdata)
 	}
 
 	mdd = kzalloc(sizeof(*mdd), GFP_KERNEL);
-	if (!mdd) {
-		pr_err("no memory to create mdss debug data\n");
+	if (!mdd)
 		return -ENOMEM;
-	}
+
 	INIT_LIST_HEAD(&mdd->base_list);
 
 	mdd->root = debugfs_create_dir("mdp", NULL);
@@ -1669,7 +1667,7 @@ int mdss_misr_set(struct mdss_data_type *mdata,
 	map->is_ping_full = false;
 	map->is_pong_full = false;
 
-	if (MISR_OP_BM != map->crc_op_mode) {
+	if (map->crc_op_mode != MISR_OP_BM) {
 
 		writel_relaxed(config,
 				mdata->mdp_base + map->ctrl_reg);
@@ -1776,7 +1774,7 @@ int mdss_misr_get(struct mdss_data_type *mdata,
 		resp->crc_op_mode = map->crc_op_mode;
 		break;
 	default:
-		ret = -ENOSYS;
+		ret = -ENOTSUPP;
 		break;
 	}
 
@@ -1851,7 +1849,7 @@ void mdss_misr_crc_collect(struct mdss_data_type *mdata, int block_id,
 				mdata->mdp_base + map->ctrl_reg);
 		}
 
-	} else if (0 == status) {
+	} else if (status == 0) {
 
 		if (mdata->mdp_rev < MDSS_MDP_HW_REV_105)
 			writel_relaxed(MISR_CRC_BATCH_CFG,
@@ -1868,7 +1866,7 @@ void mdss_misr_crc_collect(struct mdss_data_type *mdata, int block_id,
 		vsync_count, crc, map->crc_index);
 	trace_mdp_misr_crc(block_id, vsync_count, crc);
 
-	if (MAX_VSYNC_COUNT == vsync_count) {
+	if (vsync_count == MAX_VSYNC_COUNT) {
 		pr_debug("RESET vsync_count(%d)\n", vsync_count);
 		vsync_count = 0;
 	} else {

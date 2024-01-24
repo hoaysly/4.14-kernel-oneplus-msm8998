@@ -67,8 +67,8 @@ struct panel_id {
 
 static inline const char *mdss_panel2str(u32 panel)
 {
-	static const char const *names[] = {
-#define PANEL_NAME(n) [n ## _PANEL] = __stringify(n)
+	static const char * const names[] = {
+#define PANEL_NAME(n)[n ## _PANEL] = __stringify(n)
 		PANEL_NAME(MIPI_VIDEO),
 		PANEL_NAME(MIPI_CMD),
 		PANEL_NAME(DP),
@@ -533,6 +533,7 @@ struct mipi_panel_info {
 	char traffic_mode;
 	char frame_rate;
 	/* command mode */
+	char frame_rate_idle;
 	char interleave_max;
 	char insert_dcs_cmd;
 	char wr_mem_continue;
@@ -956,6 +957,12 @@ struct mdss_panel_info {
 	/* stores initial adaptive variable refresh vtotal value */
 	u32 saved_avr_vtotal;
 
+	/*
+	 * Skip panel reset during panel on/off.
+	 * Set for some in-cell panels
+	 */
+	bool skip_panel_reset;
+
 	/* HDR properties of display panel*/
 	struct mdss_panel_hdr_properties hdr_properties;
 
@@ -999,13 +1006,13 @@ struct mdss_panel_timing {
 
 struct mdss_panel_data {
 	struct mdss_panel_info panel_info;
-	void (*set_backlight) (struct mdss_panel_data *pdata, u32 bl_level);
+	void (*set_backlight)(struct mdss_panel_data *pdata, u32 bl_level);
 	int (*apply_display_setting)(struct mdss_panel_data *pdata, u32 mode);
 	unsigned char *mmss_cc_base;
 
 	/**
 	 * event_handler() - callback handler for MDP core events
-	 * @pdata:	Pointer refering to the panel struct associated to this
+	 * @pdata:	Pointer referring to the panel struct associated to this
 	 *		event. Can be used to retrieve panel info.
 	 * @e:		Event being generated, see enum mdss_intf_events
 	 * @arg:	Optional argument to pass some info from some events.
@@ -1015,8 +1022,9 @@ struct mdss_panel_data {
 	 * these events to perform appropriate actions for panel initialization
 	 * and teardown.
 	 */
-	int (*event_handler) (struct mdss_panel_data *pdata, int e, void *arg);
+	int (*event_handler)(struct mdss_panel_data *pdata, int e, void *arg);
 	struct device_node *(*get_fb_node)(struct platform_device *pdev);
+	bool (*get_idle)(struct mdss_panel_data *pdata);
 
 	struct list_head timings_list;
 	struct mdss_panel_timing *current_timing;
@@ -1052,6 +1060,10 @@ static inline u32 mdss_panel_get_framerate(struct mdss_panel_info *panel_info)
 {
 	u32 frame_rate, pixel_total;
 	u64 rate;
+	struct mdss_panel_data *panel_data =
+			container_of(panel_info, typeof(*panel_data),
+					panel_info);
+	bool idle = false;
 
 	if (panel_info == NULL)
 		return DEFAULT_FRAME_RATE;
@@ -1060,6 +1072,12 @@ static inline u32 mdss_panel_get_framerate(struct mdss_panel_info *panel_info)
 	case MIPI_VIDEO_PANEL:
 	case MIPI_CMD_PANEL:
 		frame_rate = panel_info->mipi.frame_rate;
+		if (panel_data->get_idle)
+			idle = panel_data->get_idle(panel_data);
+		if (idle)
+			frame_rate = panel_info->mipi.frame_rate_idle;
+		else
+			frame_rate = panel_info->mipi.frame_rate;
 		break;
 	case EDP_PANEL:
 		frame_rate = panel_info->edp.frame_rate;
@@ -1232,7 +1250,7 @@ static inline bool mdss_panel_is_power_on_interactive(int panel_power_state)
  * @panel_power_state: enum identifying the power state to be checked
  *
  * A panel is considered to be on as long as it can accept any commands
- * or data. Sometimes it is posible to program the panel to be in a low
+ * or data. Sometimes it is possible to program the panel to be in a low
  * power non-interactive state. This function returns false only if panel
  * has explicitly been turned off.
  */
@@ -1257,12 +1275,13 @@ static inline bool mdss_panel_is_power_on_lp(int panel_power_state)
 }
 
 /**
- * mdss_panel_is_panel_power_on_ulp: - checks if panel is in ultra low power mode
+ * mdss_panel_is_panel_power_on_ulp: - checks if panel is in
+ *                                   ultra low power mode
  * @pdata: pointer to the panel struct associated to the panel
  * @panel_power_state: enum identifying the power state to be checked
  *
  * This function returns true if the panel is in a ultra low power
- * state where it is still on but cannot recieve any display updates.
+ * state where it is still on but cannot receive any display updates.
  */
 static inline bool mdss_panel_is_power_on_ulp(int panel_power_state)
 {
@@ -1295,8 +1314,8 @@ static inline void mdss_panel_update_clk_rate(struct mdss_panel_info *pinfo,
 }
 
 /**
- * mdss_panel_calc_frame_rate() - calculate panel frame rate based on panel timing
- *				information.
+ * mdss_panel_calc_frame_rate() - calculate panel frame rate based
+ *                                on panel timing information.
  * @panel_info:	Pointer to panel info containing all panel information
  */
 static inline u8 mdss_panel_calc_frame_rate(struct mdss_panel_info *pinfo)
@@ -1396,7 +1415,8 @@ void mdss_panel_dsc_initial_line_calc(struct dsc_desc *dsc, int enc_ip_width);
 void mdss_panel_dsc_pclk_param_calc(struct dsc_desc *dsc, int intf_width);
 
 /**
- * mdss_panel_dsc_prepare_pps_buf - prepares Picture Parameter Set to be sent to panel
+ * mdss_panel_dsc_prepare_pps_buf - prepares Picture Parameter Set to be
+ *                                sent to panel
  * @dsc: pointer to DSC structure associated with panel_info
  * @buf: buffer that holds PPS
  * @pps_id: pps_identifier

@@ -1172,7 +1172,6 @@ static int dp_audio_info_setup(struct platform_device *pdev,
 	mdss_dp_config_audio_acr_ctrl(&dp_ctrl->ctrl_io, dp_ctrl->link_rate);
 	mdss_dp_set_safe_to_exit_level(&dp_ctrl->ctrl_io, dp_ctrl->lane_cnt);
 	mdss_dp_audio_enable(&dp_ctrl->ctrl_io, true);
-	dp_ctrl->audio_en = true;
 
 end:
 	return rc;
@@ -1214,8 +1213,7 @@ static void dp_audio_teardown_done(struct platform_device *pdev)
 	mdss_dp_audio_enable(&dp->ctrl_io, false);
 	/* Make sure the DP audio engine is disabled */
 	wmb();
-	dp->audio_en = false;
-	complete_all(&dp->audio_comp);
+
 	pr_debug("audio engine disabled\n");
 } /* dp_audio_teardown_done */
 
@@ -1908,7 +1906,7 @@ static int mdss_dp_off_irq(struct mdss_dp_drv_pdata *dp_drv)
 	mdss_dp_audio_enable(&dp_drv->ctrl_io, false);
 	/* Make sure DP mainlink and audio engines are disabled */
 	wmb();
-	dp_drv->audio_en = false;
+
 	/*
 	 * If downstream device is a brige which no longer has any
 	 * downstream devices connected to it, then we should reset
@@ -1941,7 +1939,6 @@ static int mdss_dp_off_hpd(struct mdss_dp_drv_pdata *dp_drv)
 	mdss_dp_aux_ctrl(&dp_drv->ctrl_io, false);
 
 	mdss_dp_audio_enable(&dp_drv->ctrl_io, false);
-	dp_drv->audio_en = false;
 
 	mdss_dp_host_deinit(dp_drv);
 
@@ -2346,14 +2343,6 @@ notify:
 		ret = mdss_dp_send_video_notification(dp, true);
 	} else {
 		mdss_dp_send_audio_notification(dp, false);
-		if (dp->audio_en) {
-			reinit_completion(&dp->audio_comp);
-			ret = wait_for_completion_timeout(&dp->audio_comp,
-						msecs_to_jiffies(2000));
-			if (ret <= 0)
-				pr_err("%s Wait for Audio Comp timed out\n",
-							 __func__);
-		}
 		ret = mdss_dp_send_video_notification(dp, false);
 	}
 
@@ -2394,6 +2383,7 @@ static int mdss_dp_process_hpd_high(struct mdss_dp_drv_pdata *dp)
 		 */
 		pr_err("dpcd read failed, set failsafe parameters\n");
 		mdss_dp_set_default_link_parameters(dp);
+		goto read_edid;
 	}
 
 	/*
@@ -2411,6 +2401,7 @@ static int mdss_dp_process_hpd_high(struct mdss_dp_drv_pdata *dp)
 		goto end;
 	}
 
+read_edid:
 	ret = mdss_dp_edid_read(dp);
 	if (ret) {
 		if (ret == -ENODEV)
@@ -4376,6 +4367,10 @@ static void mdss_dp_process_attention(struct mdss_dp_drv_pdata *dp_drv)
 	if (!dp_drv->alt_mode.dp_status.hpd_high) {
 		pr_debug("Attention: HPD low\n");
 
+		if (!dp_drv->power_on) {
+			pr_debug("HPD already low\n");
+			return;
+		}
 
 		if (dp_is_hdcp_enabled(dp_drv) && dp_drv->hdcp.ops->off) {
 			cancel_delayed_work_sync(&dp_drv->hdcp_cb_work);
@@ -4459,6 +4454,7 @@ static void mdss_dp_handle_attention(struct mdss_dp_drv_pdata *dp)
 
 		dp->alt_mode.dp_status.response = vdo;
 		mdss_dp_usbpd_ext_dp_status(&dp->alt_mode.dp_status);
+		mdss_dp_process_attention(dp);
 
 		if (atomic_read(&dp->notification_pending)) {
 			pr_debug("waiting for the attention event to finish\n");
@@ -4475,7 +4471,6 @@ static void mdss_dp_handle_attention(struct mdss_dp_drv_pdata *dp)
 			 */
 			wait_for_completion(&dp->notification_comp);
 		}
-		mdss_dp_process_attention(dp);
 		pr_debug("done processing item %d in the list\n", i);
 	};
 
@@ -4563,7 +4558,6 @@ static int mdss_dp_probe(struct platform_device *pdev)
 	init_completion(&dp_drv->aux_comp);
 	init_completion(&dp_drv->idle_comp);
 	init_completion(&dp_drv->video_comp);
-	init_completion(&dp_drv->audio_comp);
 
 	if (mdss_dp_usbpd_setup(dp_drv)) {
 		pr_err("Error usbpd setup!\n");

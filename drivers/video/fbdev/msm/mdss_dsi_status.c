@@ -166,7 +166,7 @@ static int fb_event_callback(struct notifier_block *self,
 	}
 
 	/* handle only mdss fb device */
-	if (strncmp("mdssfb", evdata->info->fix.id, 6))
+	if (strcmp("mdssfb", evdata->info->fix.id))
 		return NOTIFY_DONE;
 
 	mfd = evdata->info->par;
@@ -254,10 +254,8 @@ int __init mdss_dsi_status_init(void)
 	int rc = 0;
 
 	pstatus_data = kzalloc(sizeof(struct dsi_status_data), GFP_KERNEL);
-	if (!pstatus_data) {
-		pr_err("%s: can't allocate memory\n", __func__);
+	if (!pstatus_data)
 		return -ENOMEM;
-	}
 
 	pstatus_data->fb_notifier.notifier_call = fb_event_callback;
 
@@ -289,8 +287,7 @@ void __exit mdss_dsi_status_exit(void)
 module_param_call(interval, param_set_interval, param_get_uint,
 						&interval, 0644);
 MODULE_PARM_DESC(interval,
-		"Duration in milliseconds to send BTA command for checking"
-		"DSI status periodically");
+	"Duration in milliseconds to send BTA command for DSI status check");
 
 module_param_call(dsi_status_disable, param_dsi_status_disable, param_get_uint,
 						&dsi_status_disable, 0644);

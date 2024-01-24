@@ -18,6 +18,7 @@
 #include "mdss_dsi_clk.h"
 #include "mdss_dsi.h"
 #include "mdss_debug.h"
+#include "mdss_rgb.h"
 
 #define MAX_CLIENT_NAME_LEN 20
 struct dsi_core_clks {
