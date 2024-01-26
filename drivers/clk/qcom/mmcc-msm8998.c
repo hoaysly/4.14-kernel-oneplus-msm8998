@@ -1551,7 +1551,7 @@ static struct clk_rcg2 dp_crypto_clk_src = {
 
 static struct clk_branch mmss_bimc_smmu_ahb_clk = {
 	.halt_reg = 0x0E004,
-	.halt_check = BRANCH_VOTED,
+	.halt_check = BRANCH_HALT_SKIP,
 	.hwcg_reg = 0x0E004,
 	.hwcg_bit = 1,
 	.clkr = {
@@ -1571,7 +1571,7 @@ static struct clk_branch mmss_bimc_smmu_ahb_clk = {
 
 static struct clk_branch mmss_bimc_smmu_axi_clk = {
 	.halt_reg = 0x0E008,
-	.halt_check = BRANCH_VOTED,
+	.halt_check = BRANCH_HALT_SKIP,
 	.hwcg_reg = 0x0E008,
 	.hwcg_bit = 1,
 	.clkr = {
@@ -3007,7 +3007,7 @@ static struct clk_branch mmss_mdss_vsync_clk = {
 
 static struct clk_branch mmss_mnoc_ahb_clk = {
 	.halt_reg = 0x05024,
-	.halt_check = BRANCH_VOTED,
+	.halt_check = BRANCH_HALT_SKIP,
 	.clkr = {
 		.enable_reg = 0x05024,
 		.enable_mask = BIT(0),
@@ -3180,7 +3180,7 @@ static struct clk_branch mmss_video_maxi_clk = {
 
 static struct clk_branch mmss_vmem_ahb_clk = {
 	.halt_reg = 0x0F068,
-	.halt_check = BRANCH_VOTED,
+	.halt_check = BRANCH_HALT_SKIP,
 	.hwcg_reg = 0x0F068,
 	.hwcg_bit = 1,
 	.clkr = {
