@@ -150,8 +150,8 @@ static int dsi_core_clk_stop(struct dsi_core_clks *c_clks)
 	return rc;
 }
 
-static int dsi_link_hs_clk_set_rate(
-	struct mdss_dsi_link_hs_clk_info *link_hs_clks)
+static int
+dsi_link_hs_clk_set_rate(struct mdss_dsi_link_hs_clk_info *link_hs_clks)
 {
 	int rc = 0;
 	struct mdss_dsi_clk_mngr *mngr;
@@ -183,6 +183,11 @@ static int dsi_link_hs_clk_set_rate(
 	if (ctrl->platform_clk_reconf_hack) {
 		rc = clk_set_rate(link_hs_clks->byte_clk,
 				  link_hs_clks->byte_clk_rate / 2);
+		rc = clk_set_rate(link_hs_clks->byte_clk,
+				  link_hs_clks->byte_clk_rate * 3 / 4);
+
+		rc = clk_set_rate(link_hs_clks->pixel_clk,
+				  link_hs_clks->pix_clk_rate / 2);
 		rc = clk_set_rate(link_hs_clks->pixel_clk,
 				  link_hs_clks->pix_clk_rate * 3 / 4);
 	}
@@ -190,13 +195,11 @@ static int dsi_link_hs_clk_set_rate(
 	rc = clk_set_rate(link_hs_clks->byte_clk, link_hs_clks->byte_clk_rate);
 	if (rc) {
 		pr_err("clk_set_rate failed for byte_clk rc = %d\n", rc);
-		goto error;
 	}
 
 	rc = clk_set_rate(link_hs_clks->pixel_clk, link_hs_clks->pix_clk_rate);
 	if (rc) {
 		pr_err("clk_set_rate failed for pixel_clk rc = %d\n", rc);
-		goto error;
 	}
 
 	/*
@@ -207,7 +210,7 @@ static int dsi_link_hs_clk_set_rate(
 	 */
 	if (link_hs_clks->byte_intf_clk) {
 		rc = clk_set_rate(link_hs_clks->byte_intf_clk,
-			link_hs_clks->byte_clk_rate / 2);
+				  link_hs_clks->byte_clk_rate / 2);
 		if (rc) {
 			pr_err("set rate failed for byte intf clk rc=%d\n", rc);
 			goto error;
