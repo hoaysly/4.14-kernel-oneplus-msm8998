@@ -2935,7 +2935,7 @@ static struct clk_branch mmss_mdss_mdp_lut_clk = {
 
 static struct clk_branch mmss_mdss_pclk0_clk = {
 	.halt_reg = 0x02314,
-	.halt_check = BRANCH_HALT,
+	.halt_check = BRANCH_HALT_SKIP,
 	.clkr = {
 		.enable_reg = 0x02314,
 		.enable_mask = BIT(0),
