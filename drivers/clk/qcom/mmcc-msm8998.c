@@ -2591,7 +2591,7 @@ static struct clk_branch mmss_mdss_axi_clk = {
 
 static struct clk_branch mmss_mdss_byte0_clk = {
 	.halt_reg = 0x0233C,
-	.halt_check = BRANCH_HALT,
+	.halt_check = BRANCH_HALT_SKIP,
 	.clkr = {
 		.enable_reg = 0x0233C,
 		.enable_mask = BIT(0),
