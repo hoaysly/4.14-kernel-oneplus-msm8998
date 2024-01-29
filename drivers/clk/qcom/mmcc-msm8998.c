@@ -2631,7 +2631,7 @@ static struct clk_regmap_div mmss_mdss_byte0_intf_div_clk = {
 
 static struct clk_branch mmss_mdss_byte0_intf_clk = {
 	.halt_reg = 0x02374,
-	.halt_check = BRANCH_HALT,
+	.halt_check = BRANCH_HALT_SKIP,
 	.clkr = {
 		.enable_reg = 0x02374,
 		.enable_mask = BIT(0),
