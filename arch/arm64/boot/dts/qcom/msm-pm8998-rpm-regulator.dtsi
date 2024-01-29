@@ -198,6 +198,7 @@
 		qcom,resource-id = <0>;
 		qcom,regulator-type = <0>;
 		qcom,hpm-min-load = <10000>;
+		qcom,regulator-hw-type = "pmic4-ldo";
 		status = "disabled";
 
 		regulator-l4 {
