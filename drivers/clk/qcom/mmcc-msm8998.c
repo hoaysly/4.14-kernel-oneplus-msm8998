@@ -3126,6 +3126,7 @@ static struct clk_branch mmss_video_ahb_clk = {
 		.hw.init = &(struct clk_init_data) {
 			.name = "mmss_video_ahb_clk",
 			.ops = &clk_branch2_ops,
+			.flags = CLK_IS_CRITICAL,
 		},
 	},
 };
