@@ -2695,6 +2695,7 @@ static struct clk_branch gcc_mss_mnoc_bimc_axi_clk = {
 		.hw.init = &(struct clk_init_data) {
 			.name = "gcc_mss_mnoc_bimc_axi_clk",
 			.ops = &clk_branch2_ops,
+			.flags = CLK_IS_CRITICAL,
 		},
 	},
 };
