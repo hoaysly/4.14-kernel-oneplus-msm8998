@@ -664,7 +664,7 @@ static void update_fireware_version_func(struct work_struct *work)
 	snprintf(di->fw_id, 255, "0x%x",
 	dashchg_firmware_data[di->dashchg_fw_ver_count - 4]);
 	snprintf(di->manu_name, 255, "%s", "ONEPLUS");
-	//push_component_info(FAST_CHARGE, di->fw_id, di->manu_name);
+	push_component_info(FAST_CHARGE, di->fw_id, di->manu_name);
 }
 void di_watchdog(unsigned long data)
 {
