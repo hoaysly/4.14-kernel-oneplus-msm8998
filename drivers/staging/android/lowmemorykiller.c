@@ -29,11 +29,6 @@
  * GNU General Public License for more details.
  *
  */
-/*
- * NOTE: This file has been modified by Sony Mobile Communications Inc.
- * Modifications are Copyright (c) 2018 Sony Mobile Communications Inc,
- * and licensed under the license of the file.
- */
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
@@ -54,14 +49,11 @@
 #include <linux/cpuset.h>
 #include <linux/vmpressure.h>
 #include <linux/freezer.h>
+#include <linux/memory.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/almk.h>
 #include <linux/show_mem_notifier.h>
-
-#ifdef LMK_TNG_ENABLE_TRACE
-#include <trace/events/lmk.h>
-#endif
 
 #ifdef CONFIG_HIGHMEM
 #define _ZONE ZONE_HIGHMEM
@@ -76,13 +68,8 @@
 static int enable_lmk = 1;
 module_param_named(enable_lmk, enable_lmk, int, 0644);
 
-#include "lowmemorykiller_stats.h"
-#ifdef CONFIG_ANDROID_LOW_MEMORY_KILLER_TNG
-#include "lowmemorykiller_tng.h"
-#endif
-
-u32 lowmem_debug_level = 1;
-short lowmem_adj[6] = {
+static u32 lowmem_debug_level = 1;
+static short lowmem_adj[6] = {
 	0,
 	1,
 	6,
@@ -90,7 +77,7 @@ short lowmem_adj[6] = {
 };
 
 static int lowmem_adj_size = 4;
-int lowmem_minfree[6] = {
+static int lowmem_minfree[6] = {
 	3 * 512,	/* 6MB */
 	2 * 1024,	/* 8MB */
 	4 * 1024,	/* 16MB */
@@ -101,17 +88,6 @@ static int lowmem_minfree_size = 4;
 static int lmk_fast_run = 1;
 
 static unsigned long lowmem_deathpending_timeout;
-
-int lowmem_min_param_size(void)
-{
-	int array_size = ARRAY_SIZE(lowmem_adj);
-
-	if (lowmem_adj_size < array_size)
-		array_size = lowmem_adj_size;
-	if (lowmem_minfree_size < array_size)
-		array_size = lowmem_minfree_size;
-	return array_size;
-}
 
 #define lowmem_print(level, x...)			\
 	do {						\
@@ -124,7 +100,7 @@ static unsigned long lowmem_count(struct shrinker *s,
 {
 	if (!enable_lmk)
 		return 0;
-	lmk_inc_stats(LMK_COUNT);
+
 	return global_node_page_state(NR_ACTIVE_ANON) +
 		global_node_page_state(NR_ACTIVE_FILE) +
 		global_node_page_state(NR_INACTIVE_ANON) +
@@ -136,8 +112,14 @@ static atomic_t shift_adj = ATOMIC_INIT(0);
 static short adj_max_shift = 353;
 module_param_named(adj_max_shift, adj_max_shift, short, 0644);
 
+enum {
+	ADAPTIVE_LMK_DISABLED = 0,
+	ADAPTIVE_LMK_ENABLED,
+	ADAPTIVE_LMK_WAS_ENABLED,
+};
+
 /* User knob to enable/disable adaptive lmk feature */
-static int enable_adaptive_lmk;
+static int enable_adaptive_lmk = ADAPTIVE_LMK_DISABLED;
 module_param_named(enable_adaptive_lmk, enable_adaptive_lmk, int, 0644);
 
 /*
@@ -151,7 +133,7 @@ static int vmpressure_file_min;
 module_param_named(vmpressure_file_min, vmpressure_file_min, int, 0644);
 
 /* User knob to enable/disable oom reaping feature */
-int oom_reaper = 1;
+static int oom_reaper = 1;
 module_param_named(oom_reaper, oom_reaper, int, 0644);
 
 /* Variable that helps in feed to the reclaim path  */
@@ -174,11 +156,11 @@ enum {
 	VMPRESSURE_ADJUST_NORMAL,
 };
 
-int adjust_minadj(short *min_score_adj)
+static int adjust_minadj(short *min_score_adj)
 {
 	int ret = VMPRESSURE_NO_ADJUST;
 
-	if (!enable_adaptive_lmk)
+	if (enable_adaptive_lmk != ADAPTIVE_LMK_ENABLED)
 		return 0;
 
 	if (atomic_read(&shift_adj) &&
@@ -201,12 +183,8 @@ static int lmk_vmpressure_notifier(struct notifier_block *nb,
 	unsigned long pressure = action;
 	int array_size = ARRAY_SIZE(lowmem_adj);
 
-	if (!enable_adaptive_lmk) {
-#ifdef CONFIG_ANDROID_LOW_MEMORY_KILLER_TNG
-		balance_cache(pressure);
-#endif
+	if (enable_adaptive_lmk != ADAPTIVE_LMK_ENABLED)
 		return 0;
-	}
 
 	if (pressure >= 95) {
 		other_file = global_node_page_state(NR_FILE_PAGES) -
@@ -248,9 +226,7 @@ static int lmk_vmpressure_notifier(struct notifier_block *nb,
 		trace_almk_vmpressure(pressure, other_free, other_file);
 		atomic_set(&shift_adj, 0);
 	}
-#ifdef CONFIG_ANDROID_LOW_MEMORY_KILLER_TNG
-	balance_cache(pressure);
-#endif
+
 	return 0;
 }
 
@@ -456,61 +432,7 @@ void tune_lmk_param(int *other_free, int *other_file, struct shrink_control *sc)
 		lowmem_print(4, "lowmem_shrink tunning for others ofree %d, "
 			     "%d\n", *other_free, *other_file);
 	}
-#ifdef CONFIG_ANDROID_LOW_MEMORY_KILLER_CONSIDER_SWAP
-	if (zone_watermark_ok(preferred_zone, 0,
-			  low_wmark_pages(preferred_zone), 0, 0)) {
-		struct sysinfo si;
-		si_swapinfo(&si);
-		*other_free += si.freeswap;
-#ifdef CONFIG_ZRAM
-		/* If swap is actually residing in RAM (e. g. the swap device
-		 * is a ZRAM device), we need to subtract the amount of RAM
-		 * that will be occupied by compressed data. To play on the
-		 * safe side, it's better to subtract too much than too few,
-		 * otherwise LMK may not be triggered when it has to be. ZRAM
-		 * compression ratio is at least 2, so we subtract half of the
-		 * reported freeswap.
-		 */
-		*other_free -= si.freeswap >> 1;
-#endif
-		lowmem_print(4, "lowmem_shrink tunning for swap "
-			     "ofree %d, %d\n", *other_free, *other_file);
-	}
-#endif
 }
-
-#ifdef CONFIG_ANDROID_LOW_MEMORY_KILLER_CONSIDER_SWAP
-static void lowmem_wakeup_kswapds(struct shrink_control *sc, int minfree)
-{
-	gfp_t gfp_mask;
-	struct zone *preferred_zone;
-	struct zonelist *zonelist;
-	enum zone_type high_zoneidx, classzone_idx;
-	int order = 0;
-	struct zoneref *zref;
-
-	if (likely(current_is_kswapd()))
-		return;
-
-	gfp_mask = sc->gfp_mask;
-	adjust_gfp_mask(&gfp_mask);
-
-	zonelist = node_zonelist(0, gfp_mask);
-	high_zoneidx = gfp_zone(gfp_mask);
-	first_zones_zonelist(zonelist, high_zoneidx, NULL);
-	preferred_zone = zref->zone;
-	classzone_idx = zone_idx(preferred_zone);
-
-	for (minfree >>= 13; order < 7; order++) {
-		if (minfree <= (1 << order))
-			break;
-	}
-
-	lowmem_print(4, "lowmem_wakeup_kswapds order %d\n", order);
-	_wake_all_kswapds(order, zonelist, high_zoneidx,
-				preferred_zone);
-}
-#endif
 
 /*
  * Return the percent of memory which gfp_mask is allowed to allocate from.
@@ -528,10 +450,10 @@ static int get_minfree_scalefactor(gfp_t gfp_mask)
 	for_each_zone_zonelist(zone, z, zonelist, gfp_zone(gfp_mask))
 		nr_usable += zone->managed_pages;
 
-	return max_t(int, 1, mult_frac(100, nr_usable, totalram_pages()));
+	return max_t(int, 1, mult_frac(100, nr_usable, totalram_pages));
 }
 
-void mark_lmk_victim(struct task_struct *tsk)
+static void mark_lmk_victim(struct task_struct *tsk)
 {
 	struct mm_struct *mm = tsk->mm;
 
@@ -551,9 +473,6 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 	int ret = 0;
 	short min_score_adj = OOM_SCORE_ADJ_MAX + 1;
 	int minfree = 0;
-#ifdef CONFIG_ANDROID_LOW_MEMORY_KILLER_CONSIDER_SWAP
-	int  max_minfree = 0;
-#endif
 	int scale_percent;
 	int selected_tasksize = 0;
 	short selected_oom_score_adj;
@@ -561,8 +480,6 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 	int other_free;
 	int other_file;
 	bool lock_required = true;
-
-	lmk_inc_stats(LMK_SCAN);
 
 	other_free = global_zone_page_state(NR_FREE_PAGES) - totalreserve_pages;
 
@@ -580,13 +497,8 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 	    (other_file <= lowmem_minfree[0] >> 1))
 		lock_required = false;
 
-	if (likely(lock_required) && !mutex_trylock(&scan_mutex)) {
-#ifdef LMK_TNG_ENABLE_TRACE
-		trace_lmk_remain_scan(0, sc->nr_to_scan, sc->gfp_mask);
-#endif
-		lmk_inc_stats(LMK_BUSY);
+	if (likely(lock_required) && !mutex_trylock(&scan_mutex))
 		return 0;
-        }
 
 	tune_lmk_param(&other_free, &other_file, sc);
 
@@ -597,10 +509,6 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 		array_size = lowmem_minfree_size;
 	for (i = 0; i < array_size; i++) {
 		minfree = mult_frac(lowmem_minfree[i], scale_percent, 100);
-#ifdef CONFIG_ANDROID_LOW_MEMORY_KILLER_CONSIDER_SWAP
-		if (max_minfree < minfree)
-			max_minfree = minfree;
-#endif
 		if (other_free < minfree && other_file < minfree) {
 			min_score_adj = lowmem_adj[i];
 			break;
@@ -617,10 +525,6 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 		trace_almk_shrink(0, ret, other_free, other_file, 0);
 		lowmem_print(5, "%s %lu, %x, return 0\n",
 			     __func__, sc->nr_to_scan, sc->gfp_mask);
-#ifdef LMK_TNG_ENABLE_TRACE
-		trace_lmk_remain_scan(0, sc->nr_to_scan, sc->gfp_mask);
-#endif
-		lmk_inc_stats(LMK_NO_KILL);
 		if (lock_required)
 			mutex_unlock(&scan_mutex);
 		return 0;
@@ -640,10 +544,6 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 		if (test_task_flag(tsk, TIF_MM_RELEASED))
 			continue;
 
-		/* Ignore task if coredump in progress */
-		if (tsk->mm && tsk->mm->core_state)
-			continue;
-
 		if (oom_reaper) {
 			p = find_lock_task_mm(tsk);
 			if (!p)
@@ -659,11 +559,6 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 					rcu_read_unlock();
 					if (lock_required)
 						mutex_unlock(&scan_mutex);
-#ifdef LMK_TNG_ENABLE_TRACE
-					trace_lmk_remain_scan(0, sc->nr_to_scan,
-							      sc->gfp_mask);
-#endif
-					lmk_inc_stats(LMK_TIMEOUT);
 					return 0;
 				}
 			}
@@ -674,11 +569,6 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 					rcu_read_unlock();
 					if (lock_required)
 						mutex_unlock(&scan_mutex);
-#ifdef LMK_TNG_ENABLE_TRACE
-					trace_lmk_remain_scan(0, sc->nr_to_scan,
-							      sc->gfp_mask);
-#endif
-					lmk_inc_stats(LMK_TIMEOUT);
 					return 0;
 				}
 
@@ -723,10 +613,6 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 			rcu_read_unlock();
 			if (lock_required)
 				mutex_unlock(&scan_mutex);
-#ifdef LMK_TNG_ENABLE_TRACE
-			trace_lmk_remain_scan(0, sc->nr_to_scan, sc->gfp_mask);
-#endif
-			lmk_inc_stats(LMK_BUSY);
 			return 0;
 		}
 
@@ -775,21 +661,14 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 
 		lowmem_deathpending_timeout = jiffies + HZ;
 		rem += selected_tasksize;
-#ifdef LMK_TNG_ENABLE_TRACE
-		trace_lmk_sigkill(selected->pid, selected->comm,
-				  selected_oom_score_adj, selected_tasksize,
-				  sc->gfp_mask);
-#endif
 		rcu_read_unlock();
 		/* give the system time to free up the memory */
 		msleep_interruptible(20);
 		trace_almk_shrink(selected_tasksize, ret,
 				  other_free, other_file,
 				  selected_oom_score_adj);
-		lmk_inc_stats(LMK_KILL);
 	} else {
 		trace_almk_shrink(1, ret, other_free, other_file, 0);
-		lmk_inc_stats(LMK_WASTE);
 		rcu_read_unlock();
 		if (other_free < lowmem_minfree[0] &&
 		    other_file < lowmem_minfree[0])
@@ -803,13 +682,25 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 		     __func__, sc->nr_to_scan, sc->gfp_mask, rem);
 	if (lock_required)
 		mutex_unlock(&scan_mutex);
-#ifdef CONFIG_ANDROID_LOW_MEMORY_KILLER_CONSIDER_SWAP
-		lowmem_wakeup_kswapds(sc, max_minfree);
-#endif
-#ifdef LMK_TNG_ENABLE_TRACE
-	trace_lmk_remain_scan(rem, sc->nr_to_scan, sc->gfp_mask);
-#endif
 	return rem;
+}
+
+static int lmk_hotplug_callback(struct notifier_block *self,
+				unsigned long action, void *arg)
+{
+	switch (action) {
+	case MEM_GOING_OFFLINE:
+		if (enable_adaptive_lmk == ADAPTIVE_LMK_ENABLED)
+			enable_adaptive_lmk = ADAPTIVE_LMK_WAS_ENABLED;
+		break;
+	case MEM_OFFLINE:
+		if (enable_adaptive_lmk == ADAPTIVE_LMK_WAS_ENABLED)
+			enable_adaptive_lmk = ADAPTIVE_LMK_ENABLED;
+		break;
+	default:
+		break;
+	}
+	return NOTIFY_OK;
 }
 
 static struct shrinker lowmem_shrinker = {
@@ -818,14 +709,17 @@ static struct shrinker lowmem_shrinker = {
 	.seeks = DEFAULT_SEEKS * 16
 };
 
+static struct notifier_block lmk_memory_callback_nb = {
+	.notifier_call = lmk_hotplug_callback,
+	.priority = 0,
+};
+
 static int __init lowmem_init(void)
 {
-#ifdef CONFIG_ANDROID_LOW_MEMORY_KILLER_TNG
-	lowmem_init_tng(&lowmem_shrinker);
-#endif
 	register_shrinker(&lowmem_shrinker);
 	vmpressure_notifier_register(&lmk_vmpr_nb);
-	init_procfs_lmk();
+	if (register_hotmemory_notifier(&lmk_memory_callback_nb))
+		lowmem_print(1, "Registering memory hotplug notifier failed\n");
 	return 0;
 }
 device_initcall(lowmem_init);
