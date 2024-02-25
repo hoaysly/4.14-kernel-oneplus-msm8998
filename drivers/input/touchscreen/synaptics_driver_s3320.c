@@ -2324,6 +2324,7 @@ char *buf, bool savefile)
 	TPD_ERR("[sk]CURRENT_FIRMWARE_ID = 0x%x\n", CURRENT_FIRMWARE_ID);
 	snprintf(ts->fw_id, 12, "0x%x", CURRENT_FIRMWARE_ID);
 
+	push_component_info(TP, ts->fw_id, ts->manu_name);
 READDATA_AGAIN:
 	msleep(30);
 	mutex_lock(&ts->mutex);
@@ -4750,6 +4751,9 @@ static int synaptics_ts_probe(struct i2c_client *client,
 	sizeof(ts->test_limit_name));
 	TPD_DEBUG("synatpitcs_fw: fw_name = %s,ts->manu_name:%s\n",
 	ts->fw_name, ts->manu_name);
+
+	push_component_info(TOUCH_KEY, ts->fw_id, ts->manu_name);
+	push_component_info(TP, ts->fw_id, ts->manu_name);
 
 	synaptics_wq = create_singlethread_workqueue("synaptics_wq");
 	if (!synaptics_wq) {
