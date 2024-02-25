@@ -14,6 +14,7 @@
 #include <linux/project_info.h>
 #include <soc/qcom/smem.h>
 #include <linux/gpio.h>
+#include <linux/mm.h>
 
 static struct component_info component_info_desc[COMPONENT_MAX];
 static struct kobject *project_info_kobj;
