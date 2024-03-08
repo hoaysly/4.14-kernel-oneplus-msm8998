@@ -284,10 +284,9 @@
 			qcom,fg-esr-timer-awake = <96 96>;
 			qcom,fg-esr-timer-asleep = <256 256>;
 			qcom,fg-esr-timer-charging = <0 96>;
+			qcom,fg-sys-term-current = <190>;
+			qcom,fg-chg-term-current = <180>;
 			qcom,cycle-counter-en;
-			qcom,hold-soc-while-full;
-			qcom,fg-auto-recharge-soc;
-			qcom,fg-recharge-soc-thr = <98>;
 			status = "okay";
 
 			qcom,fg-batt-soc@4000 {
