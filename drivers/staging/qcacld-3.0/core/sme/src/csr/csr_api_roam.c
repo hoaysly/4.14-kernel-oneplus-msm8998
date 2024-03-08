@@ -2921,6 +2921,19 @@ csr_update_sae_single_pmk_cfg_param(tpAniSirGlobal mac, tCsrConfigParam *param)
 }
 #endif
 
+#ifdef WLAN_FEATURE_SAE
+static void
+csr_update_sae_connect_retries(tpAniSirGlobal mac, tCsrConfigParam *param)
+{
+	mac->sae_connect_retries = param->sae_connect_retries;
+}
+#else
+static void
+csr_update_sae_connect_retries(tpAniSirGlobal mac, tCsrConfigParam *param)
+{
+}
+#endif
+
 QDF_STATUS csr_change_default_config_param(tpAniSirGlobal pMac,
 					   tCsrConfigParam *pParam)
 {
@@ -3494,6 +3507,7 @@ QDF_STATUS csr_change_default_config_param(tpAniSirGlobal pMac,
 					pParam->enable_pending_list_req;
 		pMac->roam.configParam.sta_disable_roam =
 					pParam->sta_disable_roam;
+		csr_update_sae_connect_retries(pMac, pParam);
 	}
 	return status;
 }
@@ -3553,6 +3567,17 @@ csr_get_sae_single_pmk_config(tpAniSirGlobal mac, tCsrConfigParam *param)
 #else
 static inline void
 csr_get_sae_single_pmk_config(tpAniSirGlobal mac, tCsrConfigParam *param)
+{
+}
+#endif
+
+#ifdef WLAN_FEATURE_SAE
+static void csr_get_sae_reties_count(tpAniSirGlobal mac, tCsrConfigParam *param)
+{
+	param->sae_connect_retries = mac->sae_connect_retries;
+}
+#else
+static void csr_get_sae_reties_count(tpAniSirGlobal mac, tCsrConfigParam *param)
 {
 }
 #endif
@@ -3900,6 +3925,7 @@ QDF_STATUS csr_get_config_param(tpAniSirGlobal pMac, tCsrConfigParam *pParam)
 	csr_get_adaptive_11r_config(pMac, pParam);
 	csr_get_sae_single_pmk_config(pMac, pParam);
 	csr_get_he_config_param(pParam, pMac);
+	csr_get_sae_reties_count(pMac, pParam);
 
 	csr_get_11k_offload_config_param(&pMac->roam.configParam, pParam);
 
@@ -15883,6 +15909,8 @@ static void csr_update_pmk_cache(struct csr_roam_session *session,
 	}
 
 	session->NumPmkidCache++;
+	sme_debug("PMKSA entry added at index = %d, cache count = %d",
+		  cache_idx, session->NumPmkidCache);
 	if (session->NumPmkidCache > CSR_MAX_PMKID_ALLOWED) {
 		sme_debug("setting num pmkid cache to %d",
 			CSR_MAX_PMKID_ALLOWED);
@@ -15897,7 +15925,8 @@ csr_roam_set_pmkid_cache(tpAniSirGlobal pMac, uint32_t sessionId,
 {
 	struct csr_roam_session *pSession = CSR_GET_SESSION(pMac, sessionId);
 	uint32_t i = 0;
-	tPmkidCacheInfo *pmksa;
+	uint32_t pmkid_index;
+	tPmkidCacheInfo *pmksa, *pmkid_cache;
 	eCsrAuthType akm_type;
 
 	if (!pSession) {
@@ -15924,12 +15953,35 @@ csr_roam_set_pmkid_cache(tpAniSirGlobal pMac, uint32_t sessionId,
 		return QDF_STATUS_SUCCESS;
 	}
 
+	pmkid_cache = qdf_mem_malloc(sizeof(*pmkid_cache));
+	if (!pmkid_cache)
+		return QDF_STATUS_E_NOMEM;
+
 	for (i = 0; i < numItems; i++) {
 		pmksa = &pPMKIDCache[i];
 
+		if (!pmksa->pmk_len || pmksa->pmk_len > CSR_RSN_MAX_PMK_LEN) {
+			sme_err("Invalid PMK length");
+			qdf_mem_zero(pmkid_cache, sizeof(*pmkid_cache));
+			qdf_mem_free(pmkid_cache);
+			return QDF_STATUS_E_FAILURE;
+		}
+		qdf_copy_macaddr(&pmkid_cache->BSSID, &pmksa->BSSID);
+		sme_debug("Trying to find PMKID for " QDF_MAC_ADDR_STR,
+			  QDF_MAC_ADDR_ARRAY(pmkid_cache->BSSID.bytes));
+		if (csr_lookup_pmkid_using_bssid(pMac, pSession, pmkid_cache,
+						 &pmkid_index) &&
+		    (!qdf_mem_cmp(pmkid_cache->pmk,
+				  pmksa->pmk, pmksa->pmk_len))) {
+			sme_debug("PMKSA entry found with same PMK at index %d",
+				  pmkid_index);
+			qdf_mem_zero(pmkid_cache, sizeof(*pmkid_cache));
+			qdf_mem_free(pmkid_cache);
+			return QDF_STATUS_E_EXISTS;
+		}
+
 		/* Delete the entry if present */
-		csr_roam_del_pmkid_from_cache(pMac, sessionId,
-				pmksa, false);
+		csr_roam_del_pmkid_from_cache(pMac, sessionId, pmksa, false);
 		/* Update new entry */
 		csr_update_pmk_cache(pSession, pmksa);
 
@@ -15945,6 +15997,8 @@ csr_roam_set_pmkid_cache(tpAniSirGlobal pMac, uint32_t sessionId,
 						sessionId, pmksa->cache_id);
 		}
 	}
+	qdf_mem_zero(pmkid_cache, sizeof(*pmkid_cache));
+	qdf_mem_free(pmkid_cache);
 	return QDF_STATUS_SUCCESS;
 }
 
