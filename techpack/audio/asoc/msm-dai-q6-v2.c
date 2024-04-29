@@ -3650,16 +3650,13 @@ static int msm_dai_q6_dai_probe(struct snd_soc_dai *dai)
 				snd_ctl_new1(&avd_drift_config_controls[0],
 					dai));
 		rc = snd_ctl_add(dai->component->card->snd_card,
-				snd_ctl_new1(&sb_config_controls[3],
-					dai_data));
+				 snd_ctl_new1(&sb_config_controls[3],
+				 dai_data));
 		break;
 	case SLIMBUS_6_RX:
 		rc = snd_ctl_add(dai->component->card->snd_card,
 				snd_ctl_new1(&avd_drift_config_controls[1],
 					dai));
-		rc = snd_ctl_add(dai->component->card->snd_card,
-				 snd_ctl_new1(&sb_config_controls[3],
-				 dai_data));
 		break;
 	}
 	if (rc < 0)
@@ -6285,7 +6282,6 @@ static struct platform_driver msm_dai_q6_dev = {
 		.name = "msm-dai-q6-dev",
 		.owner = THIS_MODULE,
 		.of_match_table = msm_dai_q6_dev_dt_match,
-		.probe_type = PROBE_FORCE_SYNCHRONOUS,
 	},
 };
 
@@ -6323,7 +6319,6 @@ static struct platform_driver msm_dai_q6 = {
 		.name = "msm-dai-q6",
 		.owner = THIS_MODULE,
 		.of_match_table = msm_dai_q6_dt_match,
-		.probe_type = PROBE_FORCE_SYNCHRONOUS,
 	},
 };
 
@@ -6651,7 +6646,6 @@ static struct platform_driver msm_dai_tdm_q6 = {
 		.name = "msm-dai-tdm",
 		.owner = THIS_MODULE,
 		.of_match_table = msm_dai_tdm_dt_match,
-		.probe_type = PROBE_FORCE_SYNCHRONOUS,
 	},
 };
 
@@ -10307,7 +10301,6 @@ static struct platform_driver msm_dai_q6_tdm_driver = {
 		.name = "msm-dai-q6-tdm",
 		.owner = THIS_MODULE,
 		.of_match_table = msm_dai_q6_tdm_dev_dt_match,
-		.probe_type = PROBE_FORCE_SYNCHRONOUS,
 	},
 };
 

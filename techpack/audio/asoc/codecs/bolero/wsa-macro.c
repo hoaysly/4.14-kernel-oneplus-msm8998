@@ -46,7 +46,7 @@
 #define NUM_INTERPOLATORS 2
 
 #define WSA_MACRO_MUX_INP_SHFT 0x3
-#define WSA_MACRO_MUX_INP_MASK1 0x07
+#define WSA_MACRO_MUX_INP_MASK1 0x38
 #define WSA_MACRO_MUX_INP_MASK2 0x38
 #define WSA_MACRO_MUX_CFG_OFFSET 0x8
 #define WSA_MACRO_MUX_CFG1_OFFSET 0x4
@@ -598,10 +598,10 @@ static int wsa_macro_set_prim_interpolator_rate(struct snd_soc_dai *dai,
 			inp0_sel = int_mux_cfg0_val & WSA_MACRO_MUX_INP_MASK1;
 			inp1_sel = (int_mux_cfg0_val >>
 					WSA_MACRO_MUX_INP_SHFT) &
-					WSA_MACRO_MUX_INP_MASK1;
+					WSA_MACRO_MUX_INP_MASK2;
 			inp2_sel = (int_mux_cfg1_val >>
 					WSA_MACRO_MUX_INP_SHFT) &
-					WSA_MACRO_MUX_INP_MASK1;
+					WSA_MACRO_MUX_INP_MASK2;
 			if ((inp0_sel == (int_1_mix1_inp +
 						INTn_1_INP_SEL_RX0)) ||
 			    (inp1_sel == (int_1_mix1_inp +
@@ -829,6 +829,7 @@ static int wsa_macro_digital_mute(struct snd_soc_dai *dai, int mute)
 			}
 		}
 	}
+	bolero_wsa_pa_on(wsa_dev);
 		break;
 	default:
 		break;
@@ -1397,13 +1398,21 @@ static int wsa_macro_enable_main_path(struct snd_soc_dapm_widget *w,
 {
 	struct snd_soc_codec *codec = snd_soc_dapm_to_codec(w->dapm);
 	u16 reg = 0;
+	struct device *wsa_dev = NULL;
+	struct wsa_macro_priv *wsa_priv = NULL;
+
+	if (!wsa_macro_get_data(codec, &wsa_dev, &wsa_priv, __func__))
+		return -EINVAL;
+
 
 	reg = BOLERO_CDC_WSA_RX0_RX_PATH_CTL +
 			WSA_MACRO_RX_PATH_OFFSET * w->shift;
 	switch (event) {
 	case SND_SOC_DAPM_PRE_PMU:
-		if (wsa_macro_adie_lb(codec, w->shift))
+		if (wsa_macro_adie_lb(codec, w->shift)) {
 			snd_soc_update_bits(codec, reg, 0x20, 0x20);
+			bolero_wsa_pa_on(wsa_dev);
+		}
 		break;
 	default:
 		break;

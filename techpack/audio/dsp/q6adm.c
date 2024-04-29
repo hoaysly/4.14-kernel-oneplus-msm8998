@@ -1565,7 +1565,7 @@ static int32_t adm_callback(struct apr_client_data *data, void *priv)
 {
 	uint32_t *payload;
 	int port_idx, copp_idx, idx, client_id;
-	uint32_t num_modules;
+	int num_modules;
 	int ret;
 
 	if (data == NULL) {
@@ -2904,7 +2904,6 @@ int adm_open(int port_id, int path, int rate, int channel_mode, int topology,
 	}
 
 	if ((topology == VPM_TX_SM_ECNS_V2_COPP_TOPOLOGY) ||
-	    (topology == VPM_TX_SM_ECNS_COPP_TOPOLOGY)    ||
 	    (topology == VPM_TX_DM_FLUENCE_EF_COPP_TOPOLOGY)) {
 		if ((rate != ADM_CMD_COPP_OPEN_SAMPLE_RATE_8K) &&
 		    (rate != ADM_CMD_COPP_OPEN_SAMPLE_RATE_16K) &&

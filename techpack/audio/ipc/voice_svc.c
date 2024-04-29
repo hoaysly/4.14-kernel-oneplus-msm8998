@@ -596,7 +596,7 @@ done:
 	return ret;
 }
 
-static int voice_svc_dummy_reg(void)
+static int voice_svc_dummy_reg()
 {
 	uint32_t src_port = APR_MAX_PORTS - 1;
 

@@ -653,14 +653,10 @@ int __init msm_dai_slim_init(void)
 	return rc;
 }
 
-module_init(msm_dai_slim_init);
-
 void msm_dai_slim_exit(void)
 {
 	slim_driver_unregister(&msm_dai_slim_driver);
 }
-
-module_exit(msm_dai_slim_exit);
 
 /* Module information */
 MODULE_DESCRIPTION("Slimbus apps-owned channel handling driver");

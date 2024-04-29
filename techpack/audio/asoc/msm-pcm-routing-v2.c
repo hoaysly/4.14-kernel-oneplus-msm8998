@@ -1130,6 +1130,9 @@ static int msm_routing_find_topology_on_index(int session_type, int app_type,
 	int topology = -EINVAL;
 	struct cal_block_data *cal_block = NULL;
 
+	if (cal_data[idx] == NULL)
+		return topology;
+
 	mutex_lock(&cal_data[idx]->lock);
 	cal_block = msm_routing_find_topology(session_type, app_type,
 					      acdb_dev_id, idx, exact);
@@ -1155,9 +1158,6 @@ static int msm_routing_get_adm_topology(int fedai_id, int session_type,
 	pr_debug("%s: fedai_id %d, session_type %d, be_id %d\n",
 	       __func__, fedai_id, session_type, be_id);
 
-	if (cal_data == NULL)
-		goto done;
-
 	app_type = fe_dai_app_type_cfg[fedai_id][session_type][be_id].app_type;
 	acdb_dev_id =
 		fe_dai_app_type_cfg[fedai_id][session_type][be_id].acdb_dev_id;
@@ -1179,7 +1179,6 @@ static int msm_routing_get_adm_topology(int fedai_id, int session_type,
 			topology = NULL_COPP_TOPOLOGY;
 	}
 
-done:
 	pr_debug("%s: Using topology %d\n", __func__, topology);
 	return topology;
 }
@@ -2159,11 +2158,6 @@ static void msm_pcm_routing_process_voice(u16 reg, u16 val, int set)
 	pr_debug("%s: reg %x val %x set %x\n", __func__, reg, val, set);
 
 	session_id = msm_pcm_routing_get_voc_sessionid(val);
-
-	if (!session_id) {
-		pr_err("%s: Invalid session_id %x\n", __func__, session_id);
-		return;
-	}
 
 	pr_debug("%s: FE DAI 0x%x session_id 0x%x\n",
 		__func__, val, session_id);
@@ -20296,9 +20290,11 @@ static const struct snd_soc_dapm_route intercon[] = {
 	{"MultiMedia1 Mixer", "VOC_REC_UL", "INCALL_RECORD_TX"},
 	{"MultiMedia4 Mixer", "VOC_REC_UL", "INCALL_RECORD_TX"},
 	{"MultiMedia8 Mixer", "VOC_REC_UL", "INCALL_RECORD_TX"},
+	{"MultiMedia9 Mixer", "VOC_REC_UL", "INCALL_RECORD_TX"},
 	{"MultiMedia1 Mixer", "VOC_REC_DL", "INCALL_RECORD_RX"},
 	{"MultiMedia4 Mixer", "VOC_REC_DL", "INCALL_RECORD_RX"},
 	{"MultiMedia8 Mixer", "VOC_REC_DL", "INCALL_RECORD_RX"},
+	{"MultiMedia9 Mixer", "VOC_REC_DL", "INCALL_RECORD_RX"},
 	{"MultiMedia1 Mixer", "SLIM_4_TX", "SLIMBUS_4_TX"},
 	{"MultiMedia1 Mixer", "SLIM_6_TX", "SLIMBUS_6_TX"},
 	{"MultiMedia1 Mixer", "SLIM_7_TX", "SLIMBUS_7_TX"},
@@ -24251,8 +24247,6 @@ int __init msm_soc_routing_platform_init(void)
 	return platform_driver_register(&msm_routing_pcm_driver);
 }
 
-module_init(msm_soc_routing_platform_init);
-
 void msm_soc_routing_platform_exit(void)
 {
 	msm_routing_delete_cal_data();
@@ -24260,8 +24254,6 @@ void msm_soc_routing_platform_exit(void)
 	mutex_destroy(&routing_lock);
 	platform_driver_unregister(&msm_routing_pcm_driver);
 }
-
-module_exit(msm_soc_routing_platform_exit);
 
 MODULE_DESCRIPTION("MSM routing platform driver");
 MODULE_LICENSE("GPL v2");
