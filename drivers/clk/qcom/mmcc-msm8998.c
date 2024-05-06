@@ -3722,7 +3722,7 @@ static int mmcc_msm8998_probe(struct platform_device *pdev)
 static struct platform_driver msm_clock_mmss_driver = {
 	.probe = mmcc_msm8998_probe,
 	.driver = {
-		.name = "qcom,mmsscc-8998",
+		.name = "qcom,mmcc-msm8998",
 		.of_match_table = mmcc_msm8998_match_table,
 		.owner = THIS_MODULE,
 	},
