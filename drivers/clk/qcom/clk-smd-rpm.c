@@ -1524,6 +1524,7 @@ static struct platform_driver rpm_smd_clk_driver = {
 	.driver = {
 		.name = "qcom-clk-smd-rpm",
 		.of_match_table = rpm_smd_clk_match_table,
+		.probe_type = PROBE_FORCE_SYNCHRONOUS,
 	},
 	.probe = rpm_smd_clk_probe,
 	.remove = rpm_smd_clk_remove,
