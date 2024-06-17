@@ -715,6 +715,7 @@ static struct platform_driver gpucc_early_msm8998_driver = {
 		.name = "qcom,gpucc-early-msm8998",
 		.of_match_table = gpucc_early_msm8998_match_table,
 		.owner = THIS_MODULE,
+		.probe_type = PROBE_FORCE_SYNCHRONOUS,
 	},
 };
 
