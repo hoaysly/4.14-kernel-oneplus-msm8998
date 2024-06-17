@@ -3641,16 +3641,20 @@ static void msm_mmsscc_hamster_fixup(void)
 
 	csi0_clk_src.freq_tbl = ftbl_csi_clk_src_vq;
 	csi0_clk_src.clkr.hw.init->rate_max[VDD_DIG_LOW] = 274290000;
-	csi0_clk_src.clkr.hw.init->rate_max[VDD_DIG_LOW_L1] = 320000000;
+	csi0_clk_src.clkr.hw.init->rate_max[VDD_DIG_LOW_L1] = 300000000;
+	csi0_clk_src.clkr.hw.init->rate_max[VDD_DIG_NOMINAL] = 384000000;
 	csi1_clk_src.freq_tbl = ftbl_csi_clk_src_vq;
 	csi1_clk_src.clkr.hw.init->rate_max[VDD_DIG_LOW] = 274290000;
-	csi1_clk_src.clkr.hw.init->rate_max[VDD_DIG_LOW_L1] = 320000000;
+	csi1_clk_src.clkr.hw.init->rate_max[VDD_DIG_LOW_L1] = 300000000;
+	csi1_clk_src.clkr.hw.init->rate_max[VDD_DIG_NOMINAL] = 384000000;
 	csi2_clk_src.freq_tbl = ftbl_csi_clk_src_vq;
 	csi2_clk_src.clkr.hw.init->rate_max[VDD_DIG_LOW] = 274290000;
-	csi2_clk_src.clkr.hw.init->rate_max[VDD_DIG_LOW_L1] = 320000000;
+	csi2_clk_src.clkr.hw.init->rate_max[VDD_DIG_LOW_L1] = 300000000;
+	csi2_clk_src.clkr.hw.init->rate_max[VDD_DIG_NOMINAL] = 384000000;
 	csi3_clk_src.freq_tbl = ftbl_csi_clk_src_vq;
 	csi3_clk_src.clkr.hw.init->rate_max[VDD_DIG_LOW] = 274290000;
-	csi3_clk_src.clkr.hw.init->rate_max[VDD_DIG_LOW_L1] = 320000000;
+	csi3_clk_src.clkr.hw.init->rate_max[VDD_DIG_LOW_L1] = 300000000;
+	csi3_clk_src.clkr.hw.init->rate_max[VDD_DIG_NOMINAL] = 384000000;
 
 	jpeg0_clk_src.freq_tbl = ftbl_jpeg0_clk_src_vq;
 	jpeg0_clk_src.clkr.hw.init->rate_max[VDD_DIG_LOW_L1] = 320000000;
