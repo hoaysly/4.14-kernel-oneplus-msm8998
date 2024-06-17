@@ -3136,7 +3136,7 @@ static struct clk_branch mmss_video_subcore1_clk = {
 
 static struct clk_branch mmss_video_ahb_clk = {
 	.halt_reg = 0x01030,
-	.halt_check = BRANCH_HALT_SKIP,
+	.halt_check = BRANCH_HALT_VOTED,
 	.hwcg_reg = 0x01030,
 	.hwcg_bit = 1,
 	.clkr = {
