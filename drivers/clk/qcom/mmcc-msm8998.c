@@ -900,7 +900,8 @@ static struct clk_rcg2 rot_clk_src = {
 };
 
 static struct freq_tbl ftbl_video_core_clk_src[] = {
-	F( 100000000, P_GPLL0,      6,    0,     0),
+	F(  19200000, P_BI_TCXO,             1,    0,     0),
+	F( 100000000, P_GPLL0,               6,    0,     0),
 	F( 186000000, P_MMPLL3_OUT_EVEN,     5,    0,     0),
 	F( 360000000, P_MMPLL6_OUT_EVEN,     2,    0,     0),
 	F( 465000000, P_MMPLL3_OUT_EVEN,     2,    0,     0),
@@ -908,7 +909,8 @@ static struct freq_tbl ftbl_video_core_clk_src[] = {
 };
 
 static struct freq_tbl ftbl_video_core_clk_src_vq[] = {
-	F( 200000000, P_GPLL0,      3,    0,     0),
+	F(  19200000, P_BI_TCXO,             1,    0,     0),
+	F( 200000000, P_GPLL0,               3,    0,     0),
 	F( 269330000, P_MMPLL0_OUT_EVEN,     3,    0,     0),
 	F( 355200000, P_MMPLL6_OUT_EVEN,   2.5,    0,     0),
 	F( 444000000, P_MMPLL6_OUT_EVEN,     2,    0,     0),
@@ -921,6 +923,7 @@ static struct clk_rcg2 video_core_clk_src = {
 	.hid_width = 5,
 	.parent_map = mmcc_parent_map_7a,
 	.freq_tbl = ftbl_video_core_clk_src,
+	.enable_safe_config = true,
 	.flags = FORCE_ENABLE_RCG,
 	.clkr.hw.init = &(struct clk_init_data) {
 		.name = "video_core_clk_src",
@@ -1117,7 +1120,8 @@ static struct clk_rcg2 pclk1_clk_src = {
 };
 
 static struct freq_tbl ftbl_video_subcore_clk_src[] = {
-	F( 100000000, P_GPLL0,      6,    0,     0),
+	F(  19200000, P_BI_TCXO,             1,    0,     0),
+	F( 100000000, P_GPLL0,               6,    0,     0),
 	F( 186000000, P_MMPLL3_OUT_EVEN,     5,    0,     0),
 	F( 360000000, P_MMPLL6_OUT_EVEN,     2,    0,     0),
 	F( 465000000, P_MMPLL3_OUT_EVEN,     2,    0,     0),
@@ -1125,7 +1129,8 @@ static struct freq_tbl ftbl_video_subcore_clk_src[] = {
 };
 
 static struct freq_tbl ftbl_video_subcore_clk_src_vq[] = {
-	F( 200000000, P_GPLL0,      3,    0,     0),
+	F(  19200000, P_BI_TCXO,             1,    0,     0),
+	F( 200000000, P_GPLL0,               3,    0,     0),
 	F( 269330000, P_MMPLL0_OUT_EVEN,     3,    0,     0),
 	F( 355200000, P_MMPLL6_OUT_EVEN,   2.5,    0,     0),
 	F( 444000000, P_MMPLL6_OUT_EVEN,     2,    0,     0),
