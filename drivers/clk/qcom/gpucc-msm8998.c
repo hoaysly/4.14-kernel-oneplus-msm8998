@@ -203,7 +203,7 @@ static struct clk_init_data gfx3d_clk_data = {
 	.name = "gfx3d_clk_src",
 	.parent_names = gpucc_parent_names_0,
 	.num_parents = ARRAY_SIZE(gpucc_parent_names_0),
-	.flags = CLK_SET_RATE_PARENT,
+	.flags = CLK_SET_RATE_PARENT | CLK_OPS_PARENT_ENABLE,
 	.ops = &clk_rcg2_ops,
 	VDD_GFX_FMAX_MAP8(MIN_SVS,  180000000,
 			  LOW_SVS,  257000000,
