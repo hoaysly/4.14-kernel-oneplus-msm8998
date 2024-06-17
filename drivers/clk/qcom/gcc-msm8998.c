@@ -1066,8 +1066,8 @@ static struct clk_rcg2 sdcc2_apps_clk_src = {
 		.parent_names = gcc_parent_names_1,
 		.num_parents = ARRAY_SIZE(gcc_parent_names_1),
 		.ops = &clk_rcg2_ops,
-		VDD_DIG_FMAX_MAP3(LOWER, 19200000, LOW, 100000000,
-					NOMINAL, 200000000),
+		VDD_DIG_FMAX_MAP4(LOWER, 19200000, LOW, 50000000,
+				  NOMINAL, 100000000, HIGH, 200000000),
 	},
 };
 
