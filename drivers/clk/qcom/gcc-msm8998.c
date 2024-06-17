@@ -1271,15 +1271,15 @@ static struct freq_tbl ftbl_qspi_ref_clk_src[] = {
 static struct clk_rcg2 qspi_ref_clk_src = {
 	.cmd_rcgr = 0x9000C,
 	.hid_width = 5,
-	.parent_map = gcc_parent_map_2,
+	.parent_map = gcc_parent_map_4,
 	.freq_tbl = ftbl_qspi_ref_clk_src,
 	.clkr.hw.init = &(struct clk_init_data) {
 		.name = "qspi_ref_clk_src",
-		.parent_names = gcc_parent_names_2,
-		.num_parents = ARRAY_SIZE(gcc_parent_names_2),
+		.parent_names = gcc_parent_names_4,
+		.num_parents = ARRAY_SIZE(gcc_parent_names_4),
 		.ops = &clk_rcg2_ops,
-		VDD_DIG_FMAX_MAP3(LOWER, 40000000, LOW, 160400000,
-							NOMINAL, 320800000),
+		VDD_DIG_FMAX_MAP3(LOWER, 75000000, LOW, 150000000,
+							NOMINAL, 300000000),
 	},
 };
 
