@@ -760,6 +760,7 @@ static struct freq_tbl ftbl_mdp_clk_src[] = {
 	F( 300000000, P_GPLL0,      2,    0,     0),
 	F( 330000000, P_MMPLL5_OUT_EVEN,   2.5,    0,     0),
 	F( 412500000, P_MMPLL5_OUT_EVEN,     2,    0,     0),
+	F( 550000000, P_MMPLL5_OUT_EVEN,   1.5,    0,     0),
 	{ }
 };
 
@@ -775,7 +776,7 @@ static struct clk_rcg2 mdp_clk_src = {
 		.ops = &clk_rcg2_ops,
 		//.flags = CLK_GET_RATE_NOCACHE,
 		VDD_DIG_FMAX_MAP4(LOWER, 171430000, LOW, 275000000,
-					NOMINAL, 330000000, HIGH, 412500000),
+					NOMINAL, 330000000, HIGH, 550000000),
 	},
 };
 
@@ -872,6 +873,7 @@ static struct freq_tbl ftbl_rot_clk_src[] = {
 	F( 275000000, P_MMPLL5_OUT_EVEN,     3,    0,     0),
 	F( 330000000, P_MMPLL5_OUT_EVEN,   2.5,    0,     0),
 	F( 412500000, P_MMPLL5_OUT_EVEN,     2,    0,     0),
+	F( 550000000, P_MMPLL5_OUT_EVEN,   1.5,    0,     0),
 	{ }
 };
 
@@ -891,7 +893,7 @@ static struct clk_rcg2 rot_clk_src = {
 			LOWER, 171428571,
 			LOW, 275000000,
 			NOMINAL, 330000000,
-			HIGH, 412500000),
+			HIGH, 550000000),
 	},
 };
 
