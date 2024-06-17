@@ -915,7 +915,7 @@ static struct clk_rcg2 video_core_clk_src = {
 		.parent_names = mmcc_parent_names_7a,
 		.num_parents = ARRAY_SIZE(mmcc_parent_names_7a),
 		.ops = &clk_rcg2_ops,
-		.flags = CLK_GET_RATE_NOCACHE,
+		.flags = CLK_SET_RATE_PARENT | CLK_GET_RATE_NOCACHE,
 		VDD_DIG_FMAX_MAP4(LOWER, 100000000, LOW, 186000000,
 					NOMINAL, 360000000, HIGH, 465000000),
 	},
@@ -1579,8 +1579,8 @@ static struct clk_branch mmss_bimc_smmu_ahb_clk = {
 			.parent_names = (const char *[]){
 				"ahb_clk_src",
 			},
-			.flags = CLK_ENABLE_HAND_OFF,
 			.num_parents = 1,
+			.flags = CLK_SET_RATE_PARENT | CLK_GET_RATE_NOCACHE,
 			.ops = &clk_branch2_ops,
 		},
 	},
@@ -3037,7 +3037,7 @@ static struct clk_branch mmss_mnoc_ahb_clk = {
 				"ahb_clk_src",
 			},
 			.num_parents = 1,
-			.flags = CLK_SET_RATE_PARENT,
+			.flags = CLK_SET_RATE_PARENT | CLK_GET_RATE_NOCACHE,
 			.ops = &clk_branch2_ops,
 		},
 	},
@@ -3082,7 +3082,7 @@ static struct clk_branch mmss_misc_cxo_clk = {
 
 static struct clk_branch mmss_mnoc_maxi_clk = {
 	.halt_reg = 0x0F004,
-	.halt_check = BRANCH_HALT,
+	.halt_check = BRANCH_HALT_SKIP,
 	.clkr = {
 		.enable_reg = 0x0F004,
 		.enable_mask = BIT(0),
@@ -3092,7 +3092,7 @@ static struct clk_branch mmss_mnoc_maxi_clk = {
 				"maxi_clk_src",
 			},
 			.num_parents = 1,
-			.flags = CLK_SET_RATE_PARENT,
+			.flags = CLK_SET_RATE_PARENT | CLK_GET_RATE_NOCACHE,
 			.ops = &clk_branch2_ops,
 		},
 	},
@@ -3100,7 +3100,7 @@ static struct clk_branch mmss_mnoc_maxi_clk = {
 
 static struct clk_branch mmss_video_subcore0_clk = {
 	.halt_reg = 0x01048,
-	.halt_check = BRANCH_HALT,
+	.halt_check = BRANCH_HALT_SKIP,
 	.clkr = {
 		.enable_reg = 0x01048,
 		.enable_mask = BIT(0),
@@ -3118,7 +3118,7 @@ static struct clk_branch mmss_video_subcore0_clk = {
 
 static struct clk_branch mmss_video_subcore1_clk = {
 	.halt_reg = 0x0104C,
-	.halt_check = BRANCH_HALT,
+	.halt_check = BRANCH_HALT_SKIP,
 	.clkr = {
 		.enable_reg = 0x0104C,
 		.enable_mask = BIT(0),
@@ -3152,12 +3152,13 @@ static struct clk_branch mmss_video_ahb_clk = {
 
 static struct clk_branch mmss_video_axi_clk = {
 	.halt_reg = 0x01034,
-	.halt_check = BRANCH_HALT,
+	.halt_check = BRANCH_HALT_SKIP,
 	.clkr = {
 		.enable_reg = 0x01034,
 		.enable_mask = BIT(0),
 		.hw.init = &(struct clk_init_data) {
 			.name = "mmss_video_axi_clk",
+			.flags = CLK_SET_RATE_PARENT | CLK_GET_RATE_NOCACHE,
 			.ops = &clk_branch2_ops,
 		},
 	},
@@ -3165,7 +3166,7 @@ static struct clk_branch mmss_video_axi_clk = {
 
 static struct clk_branch mmss_video_core_clk = {
 	.halt_reg = 0x01028,
-	.halt_check = BRANCH_HALT,
+	.halt_check = BRANCH_HALT_SKIP,
 	.clkr = {
 		.enable_reg = 0x01028,
 		.enable_mask = BIT(0),
@@ -3193,7 +3194,7 @@ static struct clk_branch mmss_video_maxi_clk = {
 				"maxi_clk_src",
 			},
 			.num_parents = 1,
-			.flags = CLK_SET_RATE_PARENT,
+			.flags = CLK_SET_RATE_PARENT | CLK_GET_RATE_NOCACHE,
 			.ops = &clk_branch2_ops,
 		},
 	},
