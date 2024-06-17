@@ -1215,8 +1215,8 @@ static struct clk_rcg2 camss_gp0_clk_src = {
 		.num_parents = ARRAY_SIZE(mmcc_parent_names_gcc_0),
 		.ops = &clk_rcg2_ops,
 		.flags = CLK_GET_RATE_NOCACHE,
-		VDD_DIG_FMAX_MAP3(LOWER, 50000000, LOW, 100000000,
-					NOMINAL, 200000000),
+		VDD_DIG_FMAX_MAP3(LOWER, 6000000, LOW, 13000000,
+					NOMINAL, 24000000),
 	},
 };
 
@@ -1232,8 +1232,8 @@ static struct clk_rcg2 camss_gp1_clk_src = {
 		.num_parents = ARRAY_SIZE(mmcc_parent_names_gcc_0),
 		.ops = &clk_rcg2_ops,
 		.flags = CLK_GET_RATE_NOCACHE,
-		VDD_DIG_FMAX_MAP3(LOWER, 50000000, LOW, 100000000,
-					NOMINAL, 200000000),
+		VDD_DIG_FMAX_MAP3(LOWER, 6000000, LOW, 13000000,
+					NOMINAL, 24000000),
 	},
 };
 
