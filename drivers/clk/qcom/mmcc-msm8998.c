@@ -1324,10 +1324,11 @@ static struct clk_rcg2 mclk3_clk_src = {
 };
 
 static struct freq_tbl ftbl_csiphytimer_clk_src[] = {
-	F(  19200000, P_BI_TCXO,         1,    0,     0),
-	F( 200000000, P_GPLL0,      3,    0,     0),
-	F( 269333333, P_MMPLL0_OUT_EVEN,     3,    0,     0),
-	{ }
+	F(19200000, P_BI_TCXO, 1, 0, 0),
+	F(100000000, P_GPLL0, 6, 0, 0),
+	F(200000000, P_GPLL0, 3, 0, 0),
+	F(269333333, P_MMPLL0_OUT_EVEN, 3, 0, 0),
+	{}
 };
 
 static struct clk_rcg2 csi0phytimer_clk_src = {
