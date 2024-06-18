@@ -262,6 +262,25 @@ clk_rcg2_calc_rate(unsigned long rate, u32 m, u32 n, u32 mode, u32 hid_div)
 EXPORT_SYMBOL(clk_rcg2_calc_rate);
 
 static unsigned long
+calc_rate(unsigned long rate, u32 m, u32 n, u32 mode, u32 hid_div)
+{
+	if (hid_div) {
+		rate *= 2;
+		rate /= hid_div + 1;
+	}
+
+	if (mode) {
+		u64 tmp = rate;
+		tmp *= m;
+		do_div(tmp, n);
+		rate = tmp;
+	}
+
+	return rate;
+}
+EXPORT_SYMBOL(calc_rate);
+
+static unsigned long
 clk_rcg2_recalc_rate(struct clk_hw *hw, unsigned long parent_rate)
 {
 	struct clk_rcg2 *rcg = to_clk_rcg2(hw);
