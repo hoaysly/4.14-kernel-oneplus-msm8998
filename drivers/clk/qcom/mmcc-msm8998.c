@@ -1264,8 +1264,8 @@ static struct clk_rcg2 mclk0_clk_src = {
 		.num_parents = ARRAY_SIZE(mmcc_parent_names_gcc_1),
 		.ops = &clk_rcg2_ops,
 		.flags = CLK_GET_RATE_NOCACHE,
-		VDD_DIG_FMAX_MAP3(LOWER, 33333333, LOW, 66666667,
-					NOMINAL, 68571429),
+		VDD_DIG_FMAX_MAP3(LOWER, 33333333, LOW, 48000000,
+					NOMINAL, 66666667),
 	},
 };
 
@@ -1282,8 +1282,8 @@ static struct clk_rcg2 mclk1_clk_src = {
 		.num_parents = ARRAY_SIZE(mmcc_parent_names_gcc_1),
 		.ops = &clk_rcg2_ops,
 		.flags = CLK_GET_RATE_NOCACHE,
-		VDD_DIG_FMAX_MAP3(LOWER, 33333333, LOW, 66666667,
-					NOMINAL, 68571429),
+		VDD_DIG_FMAX_MAP3(LOWER, 33333333, LOW, 48000000,
+					NOMINAL, 66666667),
 	},
 };
 
@@ -1300,8 +1300,8 @@ static struct clk_rcg2 mclk2_clk_src = {
 		.num_parents = ARRAY_SIZE(mmcc_parent_names_gcc_1),
 		.ops = &clk_rcg2_ops,
 		.flags = CLK_GET_RATE_NOCACHE,
-		VDD_DIG_FMAX_MAP3(LOWER, 33333333, LOW, 66666667,
-					NOMINAL, 68571429),
+		VDD_DIG_FMAX_MAP3(LOWER, 33333333, LOW, 48000000,
+					NOMINAL, 66666667),
 	},
 };
 
@@ -1318,8 +1318,8 @@ static struct clk_rcg2 mclk3_clk_src = {
 		.num_parents = ARRAY_SIZE(mmcc_parent_names_gcc_1),
 		.ops = &clk_rcg2_ops,
 		.flags = CLK_GET_RATE_NOCACHE,
-		VDD_DIG_FMAX_MAP3(LOWER, 33333333, LOW, 66666667,
-					NOMINAL, 68571429),
+		VDD_DIG_FMAX_MAP3(LOWER, 33333333, LOW, 48000000,
+					NOMINAL, 66666667),
 	},
 };
 
