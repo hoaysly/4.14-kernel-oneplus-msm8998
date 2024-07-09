@@ -9,3 +9,4 @@ obj-$(CONFIG_QTI_MPM)			+= mpm.o mpm-8937.o mpm-qcs405.o
 obj-$(CONFIG_QTI_MPM)			+= mpm-8956.o mpm-8996.o
 obj-$(CONFIG_QTI_MPM)			+= mpm-8998.o mpm-sdm630.o mpm-sdm660.o
 obj-$(CONFIG_QTI_MPM)			+= mpm-trinket.o
+obj-$(CONFIG_QTI_MPM)			+= mpm-9607.o mpm-sdm429.o
