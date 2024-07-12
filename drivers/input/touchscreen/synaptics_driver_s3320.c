@@ -5086,10 +5086,6 @@ static int synaptics_i2c_resume(struct device *dev)
 	TPD_DEBUG("%s is called\n", __func__);
 	queue_delayed_work(synaptics_wq, &ts->speed_up_work,
 	msecs_to_jiffies(1));
-	if (ts->gestures_enable == 1) {
-		/*disable gpio wake system through intterrupt*/
-		disable_irq_wake(ts->irq);
-	}
 	return 0;
 }
 
