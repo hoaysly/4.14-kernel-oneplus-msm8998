@@ -1,4 +1,4 @@
-/* Copyright (c) 2014-2015,2017-2019, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2014-2015,2017-2018, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -37,6 +37,7 @@ enum msm_i2_debug_level {
 #define MASK_IS_SET_BOOL(val, mask) (MASK_IS_SET(val, mask) ? 1 : 0)
 #define KHz(freq) (1000 * freq)
 #define I2C_MSM_CLK_FAST_PLUS_FREQ  (1000000)
+#define I2C_MSM_MAX_RETRIES 5
 
 /* QUP Registers */
 enum {
@@ -91,7 +92,7 @@ enum {
 	QUP_MINI_CORE_I2C_VAL   = 0x200,
 	QUP_N_MASK              = 0x1F,
 	QUP_N_VAL               = 0x7, /* 0xF for A family */
-	QUP_NO_OUTPUT           = BIT(6),
+	QUP_NO_OUPUT            = BIT(6),
 	QUP_NO_INPUT            = BIT(7),
 	QUP_APP_CLK_ON_EN       = BIT(12),
 	QUP_CORE_CLK_ON_EN      = BIT(13),
@@ -199,7 +200,7 @@ enum i2c_msm_power_state {
 #define I2C_MSM_MAX_ERR_BUF_SZ		(256)
 #define I2C_MSM_BUF_DUMP_MAX_BC         (20)
 #define I2C_MSM_MAX_POLL_MSEC           (100)
-#define I2C_MSM_TIMEOUT_SAFETY_COEF     (10)
+#define I2C_MSM_TIMEOUT_SAFTY_COEF      (10)
 #define I2C_MSM_TIMEOUT_MIN_USEC        (500000)
 
 /* QUP v2 tags */
@@ -317,7 +318,7 @@ enum i2c_msm_dma_state {
  *     and respective tag.
  * @tag_arr array of tags in DMAable memory. Holds a tag per buffer of the same
  *          index, that is tag_arr[i] is related to buf_arr[i]. Also, tag_arr[i]
- *          is queued in the tx channel just before buf_arr[i] is queued in
+ *          is queued in the tx channel just befor buf_arr[i] is queued in
  *          the tx (output buf) or rx channel (input buffer).
  * @eot_n_flush_stop_tags EOT and flush-stop tags to be queued to the tx
  *          DMA channel after the last transfer when it is a read.
@@ -508,7 +509,7 @@ struct i2c_msm_xfer_buf {
  * i2c_msm_prof_event: profiling event
  *
  * @data Additional data about the event. The interpretation of the data is
- *       dependent on the type field.
+ *       dependant on the type field.
  * @type event type (see enum i2c_msm_prof_event_type)
  */
 struct i2c_msm_prof_event {
