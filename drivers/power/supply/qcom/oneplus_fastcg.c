@@ -951,6 +951,12 @@ static long  dash_dev_ioctl(struct file *filp, unsigned int cmd,
 			break;
 		case DASH_NOTIFY_BAD_CONNECTED:
 		case DASH_NOTIFY_NORMAL_TEMP_FULL:
+			soc = onplus_get_battery_soc();
+			if (soc < 95) {
+				pr_err("SOC is less than 95, not triggering full charge logic.\n");
+				pr_err("bad ioctl %u\n", cmd);
+				return 0;
+			}
 			if (arg == DASH_NOTIFY_NORMAL_TEMP_FULL + 1) {
 				pr_err("fastchg full, switch off fastchg, set usb_sw_gpio 0\n");
 				switch_mode_to_normal();
