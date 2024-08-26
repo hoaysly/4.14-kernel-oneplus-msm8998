@@ -43,7 +43,7 @@
 #define CHG_TIMEOUT_COUNT             6000 /* 10hr */
 #define CHG_SOFT_OVP_MV               5800
 #define BATT_SOFT_OVP_MV              4500
-#define CHG_SOFT_UVP_MV               4300
+#define CHG_SOFT_UVP_MV               4000
 #define CHG_VOLTAGE_NORMAL            5000
 #define BATT_REMOVE_TEMP              -400
 #define BATT_TEMP_HYST                20
