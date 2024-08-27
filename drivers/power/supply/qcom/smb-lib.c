@@ -5393,6 +5393,22 @@ int update_dash_unplug_status(void)
 	return 0;
 }
 
+void op_check_charger_collapse_rerun_aicl(void)
+{
+	int rc;
+
+	rc = smblib_masked_write(g_chg, USBIN_AICL_OPTIONS_CFG_REG,
+	SUSPEND_ON_COLLAPSE_USBIN_BIT
+	|USBIN_AICL_START_AT_MAX_BIT
+	| USBIN_AICL_ADC_EN_BIT
+	|USBIN_AICL_RERUN_EN_BIT, USBIN_AICL_RERUN_EN_BIT);
+	if (rc < 0)
+		dev_err(g_chg->dev,
+			"Couldn't configure AICL rc=%d\n", rc);
+	smblib_rerun_aicl(g_chg);
+	smblib_err(g_chg, "%s done\n", __func__);
+}
+
 static int op_set_collapse_fet(struct smb_charger *chg, bool on)
 {
 	int rc = 0;

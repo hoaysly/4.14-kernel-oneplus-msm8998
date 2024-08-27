@@ -41,18 +41,18 @@ struct external_battery_gauge {
 	int (*get_battery_soc)(void);
 	int (*get_average_current)(void);
 	int (*get_batt_cc)(void);
-	/* yangfangbiao@oneplus.cn, 2015/02/13  Add fcc interface */
 	int (*get_batt_fcc)(void);
-	/* yangfangbiao@oneplus.cn, */
-	/*2015/01/06  Modify for  sync with KK charge standard  */
 	bool (*fast_chg_started)(void);
+	bool (*fast_chg_status_is_ok)(void);
 	bool (*fast_switch_to_normal)(void);
 	int (*set_switch_to_noraml_false)(void);
 	int (*set_fast_chg_allow)(bool enable);
+	void (*clean)(void);
 	bool (*get_fast_chg_allow)(void);
 	int (*fast_normal_to_warm)(void);
 	int (*set_normal_to_warm_false)(void);
 	int (*get_adapter_update)(void);
+	bool (*is_enhance_dash)(void);
 	bool (*get_fast_chg_ing)(void);
 	bool (*get_fast_low_temp_full)(void);
 	int (*set_low_temp_full_false)(void);
@@ -61,7 +61,6 @@ struct external_battery_gauge {
 	int (*fast_chg_started_status)(bool status);
 	bool (*get_fastchg_firmware_already_updated)(void);
 	int (*get_device_type)(void);
-	/* david.liu@bsp, 20161025 Add BQ27411 dash charging */
 };
 
 struct notify_dash_event {
