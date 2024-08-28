@@ -3229,6 +3229,15 @@
 
 &lab_regulator {
 	qcom,qpnp-lab-ps-threshold = <20>;
+
+	/* Notify when LAB regulator is up */
+	qcom,notify-lab-vreg-ok-sts;
+
+	/*
+	 * Force polling STATUS register for short circuit detection
+	 * when enabling the LAB regulator
+	 */
+	qcom,detect-lab-short-circuit;
 };
 
 &bcl_sensor {
