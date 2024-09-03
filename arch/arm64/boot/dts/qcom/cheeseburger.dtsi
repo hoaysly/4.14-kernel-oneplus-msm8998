@@ -20,7 +20,7 @@
 
 / {
 	reserved-memory {
-		ramoops {
+		ramoops@ac000000 {
 			compatible = "removed-dma-pool", "ramoops";
 			no-map;
 			reg = <0 0xac000000 0 0x00200000>;
