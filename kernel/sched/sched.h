@@ -2683,7 +2683,7 @@ static inline unsigned long cpu_util_cfs(struct rq *rq)
 
 	if (sched_feat(UTIL_EST)) {
 		util = max_t(unsigned long, util,
-			     READ_ONCE(rq->cfs.avg.util_est));
+			     READ_ONCE(rq->cfs.avg.util_est.enqueued));
 	}
 
 	return util;
