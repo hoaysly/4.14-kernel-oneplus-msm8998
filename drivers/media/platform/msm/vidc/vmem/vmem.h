@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2019, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2014, 2018 The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -11,12 +11,12 @@
  * GNU General Public License for more details.
  */
 
-#ifndef __VENUS_BOOT_H__
-#define __VENUS_BOOT_H__
-#include "msm_vidc_resources.h"
+#ifndef __VMEM_H__
+#define __VMEM_H__
 
-int venus_boot_init(struct msm_vidc_platform_resources *res,
-		struct context_bank_info *cb);
-void venus_boot_deinit(void);
+#ifdef CONFIG_MSM_VIDC_VMEM
+int vmem_allocate(size_t size, phys_addr_t *addr);
+void vmem_free(phys_addr_t to_free);
+#endif
 
-#endif /* __VENUS_BOOT_H__ */
+#endif /* __VMEM_H__ */
