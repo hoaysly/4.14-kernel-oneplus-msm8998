@@ -13,6 +13,7 @@
 
 #define pr_fmt(fmt)	"%s: " fmt, __func__
 
+#include <linux/ion_kernel.h>
 #include <linux/errno.h>
 #include <linux/kernel.h>
 #include <linux/kthread.h>

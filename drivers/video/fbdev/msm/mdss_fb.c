@@ -16,6 +16,7 @@
 
 #define pr_fmt(fmt)	"%s: " fmt, __func__
 
+#include <linux/ion_kernel.h>
 #include <linux/videodev2.h>
 #include <linux/bootmem.h>
 #include <linux/console.h>
