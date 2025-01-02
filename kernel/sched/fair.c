@@ -4714,7 +4714,7 @@ static int tg_unthrottle_up(struct task_group *tg, void *data)
 	if (!cfs_rq->throttle_count) {
 		/* adjust cfs_rq_clock_task() */
 		cfs_rq->throttled_clock_pelt_time += rq_clock_pelt(rq) -
-					     cfs_rq->throttled_clock_task;
+					     cfs_rq->throttled_clock_pelt;
 	}
 
 	return 0;
